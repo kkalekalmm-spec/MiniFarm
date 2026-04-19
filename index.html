@@ -1,293 +1,711 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MineFarm: Pro Max Edition (Fixed)</title>
-  <style>
-    :root{--primary:#4cd137;--bg:#f5f6fa;--dark:#2f3640;--gold:#fbc531;--danger:#e84118}
-    *{box-sizing:border-box}
-    body{margin:0;padding:0;background:linear-gradient(180deg,#79c7ff 0%,#dff3ff 32%,#f4efe6 100%);font-family:Segoe UI,sans-serif;overflow:hidden;user-select:none;touch-action:manipulation;color:#1f1f1f}
-    #stat-bar{background:rgba(31,24,20,.92);color:#fff;height:66px;display:flex;justify-content:space-around;align-items:center;border-bottom:4px solid var(--gold);font-size:14px}
-    #stat-bar span{display:inline-flex;align-items:center;gap:4px}
-    .view{display:none;height:calc(100vh - 136px);overflow-y:auto;padding:14px;background:rgba(255,255,255,.18)}
-    .active-view{display:block;animation:fadeIn .22s ease-out}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-    .card{background:rgba(255,255,255,.95);border-radius:18px;padding:14px;margin-bottom:12px;border:2px solid rgba(47,54,64,.15);box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    .btn{background:var(--primary);color:#fff;border:none;padding:10px 14px;border-radius:12px;font-weight:700;box-shadow:0 4px #3b8f28;transition:transform .05s ease}
-    .btn:active{transform:translateY(2px);box-shadow:none}
-    .btn.secondary{background:#f0f0f0;color:#222;box-shadow:0 4px #c8c8c8}
-    .btn.warn{background:var(--gold);color:#352100;box-shadow:0 4px #d49f00}
-    .btn.danger{background:var(--danger);box-shadow:0 4px #b02f0d}
-    .btn:disabled{opacity:.45;box-shadow:none;transform:none}
-    .item-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.08);padding:10px 0}
-    .item-row:last-child{border-bottom:none}
-    .muted{opacity:.65;font-size:12px}.tiny{font-size:12px}.mono{font-variant-numeric:tabular-nums}
-    .section-label{font-size:13px;font-weight:800;color:#6d4a36;margin:6px 0 10px;letter-spacing:.2px}
-    .empty-state{padding:14px;text-align:center;color:#7c7c7c;background:#fff;border:1px dashed rgba(0,0,0,.1);border-radius:14px}
-    .progress-line{width:100%;height:8px;background:#ececec;border-radius:999px;overflow:hidden;margin-top:8px}.progress-fill{height:100%;background:linear-gradient(90deg,#49d44d 0%,#f2d64a 100%);width:0%}
-    #farm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:400px;margin:auto}
-    .tile{aspect-ratio:1/1;background:linear-gradient(180deg,#57c84d 0%,#3d9d36 100%);border-radius:12px;border-bottom:5px solid #2d5a27;position:relative;display:flex;justify-content:center;align-items:center;font-size:22px;overflow:hidden}
-    .tile.tilled{background:linear-gradient(180deg,#9f6a3a 0%,#71461f 100%)}
-    .tile.watered{box-shadow:inset 0 0 0 2px #1db0ff, inset 0 0 18px rgba(29,176,255,.45)}
-    .tile.pest::after{content:'🐛';position:absolute;top:5px;right:5px;font-size:12px}
-    .shop-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
-    .tab{background:#eee;padding:7px 12px;border-radius:12px;font-size:12px;white-space:nowrap;flex:0 0 auto;border:1px solid rgba(0,0,0,.05)}
-    .tab.active{background:var(--gold);color:#352100;font-weight:700}
-    #house-shell{background:linear-gradient(180deg,#fff2df 0%,#f7e6cc 100%);border:2px solid rgba(111,78,55,.18);border-radius:22px;padding:14px;box-shadow:0 10px 28px rgba(0,0,0,.1)}
-    .house-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-    .house-title{font-size:18px;font-weight:800;color:#5a3826;margin:0 0 6px}.house-sub{font-size:12px;color:#7a5a48;line-height:1.4}
-    .house-controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 8px}.mode-btn.active{outline:3px solid rgba(76,209,55,.35);transform:translateY(-1px)}
-    #house-grid{display:grid;gap:8px;width:min(92vw,460px);margin:12px auto;padding:12px;border-radius:20px;background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.06)), linear-gradient(180deg, #d8b38b 0%, #c08d61 100%);border:3px solid rgba(111,78,55,.22);box-shadow:inset 0 0 0 2px rgba(255,255,255,.18), 0 10px 24px rgba(0,0,0,.12)}
-    .house-cell{aspect-ratio:1/1;border-radius:10px;background:linear-gradient(180deg,#f7e4cb 0%,#e8c79f 100%);border:1px solid rgba(111,78,55,.25);position:relative;overflow:hidden}
-    .house-cell.occupied{background:linear-gradient(180deg,#d8b38b 0%,#c89262 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
-    .house-cell.placeable{outline:2px dashed rgba(76,209,55,.25);outline-offset:-4px}.house-cell.invalid{outline:2px dashed rgba(232,65,24,.18);outline-offset:-4px}
-    .furn-item{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-radius:12px;border:1px solid rgba(47,54,64,.12);background:linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.55));box-shadow:0 8px 18px rgba(0,0,0,.08);position:relative;overflow:hidden;cursor:pointer;color:#4a2f1f;font-weight:700;letter-spacing:.1px;padding:8px;user-select:none}
-    .furn-item .furn-emoji{font-size:26px;line-height:1}.furn-item .furn-label{font-size:10px;margin-top:4px;line-height:1.1}
-    .furn-bed{background:linear-gradient(180deg,#fff5e8 0%,#ffe1c2 100%)}.furn-rug{background:linear-gradient(180deg,#ffeac0 0%,#e5b86a 100%)}.furn-wall_art{background:linear-gradient(180deg,#fffdf7 0%,#f4eadb 100%)}.furn-window{background:linear-gradient(180deg,#dff6ff 0%,#b8ebff 100%)}.furn-plant{background:linear-gradient(180deg,#eef9e7 0%,#cbe8b3 100%)}.furn-cabinet{background:linear-gradient(180deg,#eff8ff 0%,#d5ebff 100%)}
-    .place-fx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:18px;opacity:.95;pointer-events:none;animation:fxPop .55s ease-out forwards}@keyframes fxPop{0%{transform:translate(-50%,-35%) scale(.7);opacity:1}100%{transform:translate(-50%,-95%) scale(1.25);opacity:0}}
-    #fish-area{height:250px;background:linear-gradient(180deg,#12a4ff 0%,#0078cb 100%);border-radius:20px;border:5px solid #fff;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.14)}
-    #fish-bar-container{width:80%;height:20px;background:#2f3640;border-radius:10px;margin-top:20px;position:relative;display:none;overflow:hidden}#fish-target{position:absolute;height:100%;width:20%;background:#4cd137;left:40%;border-radius:10px}#fish-pointer{position:absolute;height:100%;width:5px;background:white;left:0%;transition:left .08s linear;box-shadow:0 0 8px rgba(255,255,255,.85)}
-    #info-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:4px solid var(--dark);border-radius:20px;padding:18px;z-index:1000;display:none;width:min(88vw,320px);box-shadow:0 20px 40px rgba(0,0,0,.22)}
-    #toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(12px);background:rgba(33,28,24,.95);color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .22s ease, transform .22s ease;z-index:1100;max-width:86vw;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.18)}
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-    nav{position:fixed;bottom:0;width:100%;height:70px;background:rgba(255,255,255,.98);display:flex;justify-content:space-around;align-items:center;border-top:4px solid var(--dark);box-shadow:0 -8px 24px rgba(0,0,0,.08);z-index:500}
-    .nav-item{font-size:24px;text-align:center;color:#1f1f1f}.nav-item span{display:block;font-size:10px;font-weight:800;color:#4b4b4b;margin-top:1px}
-    @media (max-width:420px){.view{padding:12px}.split{grid-template-columns:1fr}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MineFarm: Pro Max Ultra Edition</title>
+    <style>
+        :root{
+            --primary:#4cd137;
+            --bg:#f5f6fa;
+            --dark:#2f3640;
+            --gold:#fbc531;
+            --danger:#e84118;
+            --cozy-1:#6f4e37;
+            --cozy-2:#9c6b4f;
+            --cozy-3:#f4d7b6;
+            --cozy-4:#fff6eb;
+        }
+
+        *{box-sizing:border-box}
+
+        body{
+            margin:0;
+            padding:0;
+            background:linear-gradient(180deg,#79c7ff 0%,#dff3ff 32%,#f4efe6 100%);
+            font-family:'Segoe UI',sans-serif;
+            overflow:hidden;
+            user-select:none;
+            touch-action:manipulation;
+            color:#1f1f1f;
+        }
+
+        #stat-bar{
+            background:rgba(31,24,20,.9);
+            color:#fff;
+            height:66px;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            border-bottom:4px solid var(--gold);
+            font-size:14px;
+            letter-spacing:.2px;
+        }
+
+        #stat-bar span{
+            display:inline-flex;
+            align-items:center;
+            gap:4px;
+        }
+
+        .view{
+            display:none;
+            height:calc(100vh - 136px);
+            overflow-y:auto;
+            padding:14px;
+            background:rgba(255,255,255,.18);
+        }
+
+        .active-view{
+            display:block;
+            animation:fadeIn .25s ease-out;
+        }
+
+        @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+        .card{
+            background:rgba(255,255,255,.95);
+            border-radius:18px;
+            padding:14px;
+            margin-bottom:12px;
+            border:2px solid rgba(47,54,64,.2);
+            box-shadow:0 8px 24px rgba(0,0,0,.08);
+        }
+
+        .btn{
+            background:var(--primary);
+            color:#fff;
+            border:none;
+            padding:10px 14px;
+            border-radius:12px;
+            font-weight:700;
+            box-shadow:0 4px #3b8f28;
+            transition:transform .05s ease;
+        }
+
+        .btn:active{transform:translateY(2px);box-shadow:none}
+        .btn.secondary{background:#f0f0f0;color:#222;box-shadow:0 4px #c8c8c8}
+        .btn.warn{background:var(--gold);color:#352100;box-shadow:0 4px #d49f00}
+        .btn.danger{background:var(--danger);box-shadow:0 4px #b02f0d}
+        .btn:disabled{opacity:.45;box-shadow:none;transform:none}
+
+        .item-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            border-bottom:1px solid rgba(0,0,0,.08);
+            padding:10px 0;
+        }
+
+        .item-row:last-child{border-bottom:none}
+
+        .muted{opacity:.65;font-size:12px}
+        .tiny{font-size:12px}
+        .mono{font-variant-numeric:tabular-nums}
+
+        #farm-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:10px;
+            max-width:400px;
+            margin:auto;
+        }
+
+        .tile{
+            aspect-ratio:1/1;
+            background:linear-gradient(180deg,#57c84d 0%,#3d9d36 100%);
+            border-radius:12px;
+            border-bottom:5px solid #2d5a27;
+            position:relative;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:22px;
+            overflow:hidden;
+        }
+
+        .tile.tilled{
+            background:linear-gradient(180deg,#9f6a3a 0%,#71461f 100%);
+        }
+
+        .tile.watered{
+            box-shadow:inset 0 0 0 2px #1db0ff, inset 0 0 18px rgba(29,176,255,.45);
+        }
+
+        #fish-area{
+            height:250px;
+            background:linear-gradient(180deg,#12a4ff 0%,#0078cb 100%);
+            border-radius:20px;
+            border:5px solid #fff;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            box-shadow:0 12px 30px rgba(0,0,0,.14);
+        }
+
+        #fish-bar-container{
+            width:80%;
+            height:24px;
+            background:#2f3640;
+            border-radius:12px;
+            margin-top:20px;
+            position:relative;
+            display:none;
+            overflow:hidden;
+            border:2px solid #fff;
+        }
+
+        #fish-target{
+            position:absolute;
+            height:100%;
+            width:15%; /* Narrower target for more difficulty */
+            background:#4cd137;
+            left:42.5%;
+            border-radius:10px;
+        }
+
+        #fish-pointer{
+            position:absolute;
+            height:100%;
+            width:8px;
+            background:white;
+            left:0%;
+            box-shadow:0 0 10px rgba(255,255,255,1);
+            z-index: 10;
+        }
+
+        .shop-tabs{
+            display:flex;
+            gap:6px;
+            overflow-x:auto;
+            padding-bottom:10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab{
+            background:#eee;
+            padding:7px 14px;
+            border-radius:12px;
+            font-size:12px;
+            white-space:nowrap;
+            flex:0 0 auto;
+            border:1px solid rgba(0,0,0,.05);
+        }
+
+        .tab.active{
+            background:var(--gold);
+            color:#352100;
+            font-weight:700;
+        }
+
+        #house-grid{
+            display:grid;
+            gap:8px;
+            width:min(92vw,460px);
+            margin:12px auto;
+            padding:12px;
+            border-radius:20px;
+            background: #d8b38b;
+            border:3px solid #6f4e37;
+        }
+
+        .house-cell{
+            aspect-ratio:1/1;
+            border-radius:10px;
+            background:#f7e4cb;
+            border:1px solid rgba(111,78,55,.25);
+        }
+
+        .furn-item{
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            text-align:center;
+            border-radius:12px;
+            background:white;
+            box-shadow:0 4px 8px rgba(0,0,0,.1);
+            position:relative;
+            font-weight:700;
+            padding:4px;
+        }
+
+        #info-popup{
+            position:fixed;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            background:#fff;
+            border:4px solid var(--dark);
+            border-radius:20px;
+            padding:18px;
+            z-index:1000;
+            display:none;
+            width:min(88vw,320px);
+        }
+
+        #toast{
+            position:fixed;
+            left:50%;
+            bottom:88px;
+            transform:translateX(-50%);
+            background:rgba(0,0,0,0.85);
+            color:#fff;
+            padding:10px 20px;
+            border-radius:999px;
+            font-size:13px;
+            opacity:0;
+            transition: opacity 0.3s;
+            z-index:1100;
+            pointer-events: none;
+        }
+
+        nav{
+            position:fixed;
+            bottom:0;
+            width:100%;
+            height:70px;
+            background:#fff;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            border-top:4px solid var(--dark);
+        }
+
+        .nav-item{
+            font-size:24px;
+            text-align:center;
+        }
+
+        .nav-item span{
+            display:block;
+            font-size:10px;
+            font-weight:800;
+        }
+    </style>
 </head>
 <body>
-  <div id="stat-bar">
-    <span>💰 <span id="m-gold" class="mono">100</span></span>
-    <span>⚡ <span id="m-nrg" class="mono">30</span>/30</span>
-    <span>⭐ Lv. <span id="m-lvl" class="mono">1</span></span>
-  </div>
 
-  <div id="v-farm" class="view active-view">
-    <div class="card">
-      <div class="section-label">Ruộng trồng</div>
-      <div id="farm-grid"></div>
+    <div id="stat-bar">
+        <span>💰 <span id="m-gold" class="mono">150</span></span>
+        <span>⚡ <span id="m-nrg" class="mono">30</span>/30</span>
+        <span>⭐ Lv. <span id="m-lvl" class="mono">1</span></span>
     </div>
-    <div class="card">
-      <div class="section-label">Công cụ nhanh</div>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
-        <button class="btn mode-btn" onclick="selectT('hoe')">⛏️ Cuốc<div class="muted">đào đất</div></button>
-        <button class="btn mode-btn" onclick="selectT('water')">💧 Tưới<div class="muted">giữ ẩm</div></button>
-        <button class="btn mode-btn" onclick="selectT('harvest')">🧺 Thu hoạch<div class="muted">lấy nông sản</div></button>
-      </div>
-      <p style="text-align:center;font-size:12px;margin:10px 0 0;">Đang cầm: <b id="cur-tool-name">Cuốc</b></p>
-      <p style="text-align:center;font-size:12px;margin:4px 0 0;" class="muted" id="tool-dur-text"></p>
-    </div>
-  </div>
 
-  <div id="v-fish" class="view">
-    <div id="fish-area" onclick="handleFishClick()">
-      <div id="fish-alert" style="font-size:60px;display:none;animation:bounce .4s infinite;">❗</div>
-      <div id="bobber" style="font-size:40px;">🎣</div>
-      <p id="fish-hint" style="color:white;font-weight:800;">Chạm để thả mồi</p>
-      <div id="fish-bar-container"><div id="fish-target"></div><div id="fish-pointer"></div></div>
-    </div>
-    <div class="card" style="margin-top:15px;"><h4 style="margin:0 0 8px;">Cần câu của bạn</h4><div id="rod-status" class="item-row">Chưa có cần câu</div></div>
-  </div>
-
-  <div id="v-shop" class="view">
-    <div class="shop-tabs" id="shop-tabs">
-      <div class="tab active" onclick="switchShop('seed')">🌱 Hạt</div>
-      <div class="tab" onclick="switchShop('food')">🍔 Đồ ăn</div>
-      <div class="tab" onclick="switchShop('tool')">🛠️ Đồ nghề</div>
-      <div class="tab" onclick="switchShop('decor')">🪑 Nội thất</div>
-      <div class="tab" onclick="switchShop('sell')">💰 Bán</div>
-    </div>
-    <div id="shop-content"></div>
-  </div>
-
-  <div id="v-bag" class="view">
-    <div class="card">
-      <h3 style="margin-top:0;">🎒 Túi đồ Bảo Hân</h3>
-      <div class="card" style="margin:0 0 12px;background:#fff9ef">
-        <div class="item-row" style="padding-top:0"><span>Đang chọn</span><b id="bag-selected-text">Chưa chọn gì</b></div>
-        <div class="tiny muted">Chọn nhanh từ đây để gieo hạt hoặc đặt nội thất, không cần vào menu phụ.</div>
-      </div>
-      <div id="bag-list"></div>
-    </div>
-  </div>
-
-  <div id="v-house" class="view">
-    <div id="house-shell">
-      <div class="house-header">
-        <div>
-          <h3 class="house-title" id="house-title">Nhà ở</h3>
-          <div class="house-sub" id="house-subtitle">Một góc ấm cúng để ngủ, trưng bày và trang trí.</div>
+    <div id="v-farm" class="view active-view">
+        <div class="card">
+            <div id="farm-grid"></div>
         </div>
-        <div class="card" style="margin:0;min-width:170px;padding:12px 14px;">
-          <div style="font-weight:800;color:#5a3826;" id="house-level-name">Lều gỗ nhỏ</div>
-          <div class="tiny muted" id="house-size-text">Kích thước: 4x4</div>
-          <div class="tiny muted" id="house-upgrade-text">Nâng cấp: chưa khả dụng</div>
+        <div class="card">
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+                <button class="btn" onclick="selectT('hoe')">⛏️ Cuốc</button>
+                <button class="btn" onclick="selectT('water')">💧 Tưới</button>
+                <button class="btn" onclick="selectT('harvest')">🧺 Thu hoạch</button>
+            </div>
+            <p style="text-align:center;font-size:12px;margin-top:10px;">Đang dùng: <b id="cur-tool-name">Cuốc</b></p>
         </div>
-      </div>
-      <div class="house-controls">
-        <button class="btn mode-btn active" id="mode-place" onclick="setHouseMode('place')">Đặt đồ</button>
-        <button class="btn secondary mode-btn" id="mode-retrieve" onclick="setHouseMode('retrieve')">Thu hồi</button>
-        <button class="btn warn mode-btn" id="mode-play" onclick="setHouseMode('play')">Tương tác</button>
-        <button class="btn danger" onclick="clearHouseSelection()">Bỏ chọn</button>
-        <button class="btn" onclick="upgradeHouse()">🏗️ Nâng cấp nhà</button>
-      </div>
-      <div class="card" style="margin:0 0 10px;background:rgba(255,255,255,.7)">
-        <div class="item-row" style="padding-top:0;"><span>Đã chọn</span><b id="house-selected-text">Chưa chọn nội thất nào</b></div>
-        <div class="item-row"><span>Gợi ý</span><span id="house-hint-text" class="tiny muted">Chọn một món trong túi, rồi chạm vào ô trống để đặt.</span></div>
-        <div class="progress-line"><div class="progress-fill" id="house-capacity-fill"></div></div>
-        <div class="tiny muted" id="house-capacity-text" style="margin-top:6px;">0 / 16 ô</div>
-      </div>
-      <div id="house-grid"></div>
-      <div class="card" style="margin-top:12px;">
-        <div class="section-label">Kho nội thất trong túi</div>
-        <div id="house-inventory"></div>
-      </div>
     </div>
-  </div>
 
-  <div id="info-popup">
-    <h3 id="pop-title" style="margin-top:0;">Thông tin</h3>
-    <p id="pop-progress">Tiến độ: 0%</p>
-    <p id="pop-status">Đang phát triển...</p>
-    <div id="pop-body"></div>
-    <button class="btn" style="width:100%;margin-top:8px;" onclick="closePop()">Đóng</button>
-  </div>
-  <div id="toast"></div>
+    <div id="v-fish" class="view">
+        <div id="fish-area" onclick="handleFishClick()">
+            <div id="fish-alert" style="font-size:60px;display:none;">❗</div>
+            <div id="bobber" style="font-size:40px;">🎣</div>
+            <p id="fish-hint" style="color:white;font-weight:800;">Chạm để thả mồi</p>
+            <div id="fish-bar-container">
+                <div id="fish-target"></div>
+                <div id="fish-pointer"></div>
+            </div>
+        </div>
+        <div class="card" style="margin-top:15px;">
+            <div id="rod-status">Chưa có cần câu</div>
+        </div>
+    </div>
 
-  <nav>
-    <div class="nav-item" onclick="showV('farm')">🏡<span>Trại</span></div>
-    <div class="nav-item" onclick="showV('fish')">🐟<span>Câu</span></div>
-    <div class="nav-item" onclick="showV('shop')">🏪<span>Chợ</span></div>
-    <div class="nav-item" onclick="showV('bag')">🎒<span>Túi</span></div>
-    <div class="nav-item" onclick="showV('house')">🏠<span>Nhà</span></div>
-  </nav>
+    <div id="v-shop" class="view">
+        <div class="shop-tabs" id="shop-tabs">
+            <div class="tab active" onclick="switchShop('seed')">🌱 Hạt giống</div>
+            <div class="tab" onclick="switchShop('food')">🍔 Thức ăn</div>
+            <div class="tab" onclick="switchShop('tool')">🛠️ Dụng cụ</div>
+            <div class="tab" onclick="switchShop('decor')">🪑 Nội thất</div>
+            <div class="tab" onclick="switchShop('sell')">💰 Bán hàng</div>
+        </div>
+        <div id="shop-content"></div>
+    </div>
 
-  <script>
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(type){
-      try{ if(audioCtx.state === 'suspended') audioCtx.resume(); }catch(e){}
-      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
-      const cfg = {
-        click: {type:'sine', f1:440, f2:440, d:0.11, g:0.12},
-        success: {type:'triangle', f1:523, f2:880, d:0.23, g:0.14},
-        fail: {type:'sawtooth', f1:220, f2:70, d:0.33, g:0.12},
-        tink: {type:'square', f1:1040, f2:1560, d:0.09, g:0.10}
-      }[type] || {type:'sine', f1:440, f2:440, d:0.11, g:0.12};
-      osc.type = cfg.type; osc.frequency.setValueAtTime(cfg.f1, now); osc.frequency.exponentialRampToValueAtTime(cfg.f2, now + Math.max(0.01, cfg.d - 0.03)); gain.gain.setValueAtTime(0.0001, now); gain.gain.exponentialRampToValueAtTime(cfg.g, now + 0.02); gain.gain.exponentialRampToValueAtTime(0.0001, now + cfg.d); osc.start(now); osc.stop(now + cfg.d + 0.01);
-    }
+    <div id="v-bag" class="view">
+        <div class="card">
+            <h3>🎒 Túi đồ Bảo Hân</h3>
+            <div id="bag-list"></div>
+        </div>
+    </div>
 
-    const CROPS = {
-      wheat: { name:'Lúa mì', icon:'🌾', seed:'🌱', time:10, cost:10, sell:30, xp:5 },
-      corn: { name:'Ngô', icon:'🌽', seed:'🌿', time:30, cost:30, sell:100, xp:15 },
-      strawberry: { name:'Dâu tây', icon:'🍓', seed:'☘️', time:120, cost:100, sell:450, xp:50 }
-    };
-    const FOOD = { burger:{ name:'Burger Bò', nrg:15, cost:40 }, sushi:{ name:'Sushi Cá', nrg:25, cost:60 }, energy:{ name:'Nước tăng lực', nrg:50, cost:120 } };
-    const FISH = { shrimp:{ name:'Tôm', icon:'🦐', sell:30, rare:false }, fish:{ name:'Cá lóc', icon:'🐟', sell:70, rare:false }, goldfish:{ name:'Cá vàng', icon:'🐠', sell:200, rare:true } };
-    const DECOR = { bed:{ name:'Giường ngủ', icon:'🛏️', cost:140, w:2, h:1, place:'floor', action:'sleep', desc:'Chạm để ngủ và hồi 100% năng lượng.' }, rug:{ name:'Thảm trải sàn', icon:'🧶', cost:80, w:2, h:2, place:'floor', action:null, desc:'Tạo góc ấm cúng hơn.' }, wall_art:{ name:'Tranh treo tường', icon:'🖼️', cost:100, w:1, h:1, place:'wall', action:null, desc:'Treo ở hàng trên cùng.' }, window:{ name:'Cửa sổ', icon:'🪟', cost:120, w:1, h:1, place:'wall', action:null, desc:'Gắn ở tường để nhà sáng hơn.' }, plant:{ name:'Chậu cây', icon:'🪴', cost:90, w:1, h:1, place:'floor', action:null, desc:'Thêm chút sức sống.' }, cabinet:{ name:'Tủ kính', icon:'🗄️', cost:180, w:2, h:1, place:'floor', action:'cabinet', desc:'Trưng bày các loại cá hiếm.' } };
-    const HOUSE_LEVELS = { 1:{ name:'Lều gỗ nhỏ', size:4, cost:0, reqLvl:1, icon:'🏕️' }, 2:{ name:'Nhà mái ngói ấm cúng', size:6, cost:500, reqLvl:3, icon:'🏠' }, 3:{ name:'Dinh thự sân vườn kiểu Cafe', size:8, cost:1500, reqLvl:6, icon:'☕' } };
-    const STORAGE_KEY = 'minefarm_ultra_v4_fixed';
+    <div id="v-house" class="view">
+        <div class="card">
+            <h3 id="house-title">🏠 Nhà của tôi</h3>
+            <div class="house-controls" style="margin-bottom:10px;">
+                <button class="btn" onclick="setHouseMode('place')">Đặt đồ</button>
+                <button class="btn secondary" onclick="setHouseMode('retrieve')">Thu hồi</button>
+                <button class="btn" onclick="upgradeHouse()">🏗️ Nâng cấp</button>
+            </div>
+            <div id="house-grid"></div>
+        </div>
+    </div>
 
-    function emptyFarmTile(){ return { type:'grass', crop:null, progress:0, watered:false }; }
-    function defaultState(){ return { gold:150, nrg:30, lvl:1, xp:0, inv:{ hoe:{dur:20,max:20}, rod:{dur:10,max:10} }, bag:{ wheat_seed:2, corn_seed:1, strawberry_seed:0, bed:0, rug:0, wall_art:0, window:0, plant:0, cabinet:0 }, storage:{ wheat:0, corn:0, strawberry:0, shrimp:0, fish:0, goldfish:0 }, tiles:Array(12).fill(null).map(()=>emptyFarmTile()), curTool:'hoe', shopTab:'seed', fishing:{ step:'idle', pointerPos:0, dir:1, targetRange:[35,65] }, house:{ level:1, mode:'place', selected:null, items:[] } }; }
-    let state = defaultState();
+    <div id="info-popup">
+        <h3 id="pop-title">Thông tin</h3>
+        <p id="pop-status"></p>
+        <button class="btn" style="width:100%" onclick="closePop()">Đóng</button>
+    </div>
 
-    function showToast(msg, ms=1800){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(showToast._timer); showToast._timer=setTimeout(()=>t.classList.remove('show'), ms); }
-    function xpToNextLevel(lvl){ return 50 + (lvl - 1) * 40; }
-    function addXp(amount){ state.xp += amount; let leveled=false; while(state.xp >= xpToNextLevel(state.lvl)){ state.xp -= xpToNextLevel(state.lvl); state.lvl++; leveled=true; } if(leveled){ playSound('success'); showToast('Lên cấp! Cấp hiện tại: Lv. ' + state.lvl); } }
-    function getToolLabel(tool){ if(tool==='hoe') return 'Cuốc'; if(tool==='water') return 'Tưới nước'; if(tool==='harvest') return 'Thu hoạch'; if(tool.endsWith('_seed')) return 'Hạt ' + (CROPS[tool.replace('_seed','')]?.name || tool); return tool; }
-    function houseCfg(level=state.house.level){ return HOUSE_LEVELS[level]; }
-    function houseGridSize(){ return houseCfg().size; }
-    function updateSelectedHouseLabel(){ const el=document.getElementById('house-selected-text'); if(!state.house.selected){ el.textContent='Chưa chọn nội thất nào'; return; } const def=DECOR[state.house.selected]; el.textContent = `${def.icon} ${def.name}`; }
-    function refreshBagSelectedText(){ const el=document.getElementById('bag-selected-text'); if(state.curTool?.endsWith('_seed')){ const cropId=state.curTool.replace('_seed',''); el.textContent = `🌱 ${CROPS[cropId].name}`; return; } if(state.curTool==='hoe'||state.curTool==='water'||state.curTool==='harvest'){ el.textContent = getToolLabel(state.curTool); return; } if(state.house.selected){ el.textContent = `🏠 ${DECOR[state.house.selected].name}`; return; } el.textContent = 'Chưa chọn gì'; }
+    <div id="toast"></div>
 
-    function init(){ load(); normalizeState(); renderAll(); updateUI(); setInterval(tick, 1000); }
-    function normalizeState(){ const d=defaultState(); state={...d,...state}; state.inv={...d.inv,...(state.inv||{})}; state.bag={...d.bag,...(state.bag||{})}; state.storage={...d.storage,...(state.storage||{})}; state.fishing={...d.fishing,...(state.fishing||{})}; state.house={...d.house,...(state.house||{})}; if(!Array.isArray(state.tiles) || state.tiles.length!==12){ state.tiles=Array(12).fill(null).map(()=>emptyFarmTile()); } else { state.tiles=state.tiles.map(t=>({ type:t?.type || 'grass', crop:t?.crop || null, progress: typeof t?.progress === 'number' ? t.progress : 0, watered: !!t?.watered })); } if(!state.house.items) state.house.items=[]; if(typeof state.house.level!=='number') state.house.level=1; if(typeof state.house.selected==='undefined') state.house.selected=null; if(typeof state.house.mode!=='string') state.house.mode='place'; }
-    function renderAll(){ renderFarm(); renderShop(); renderBag(); renderHouse(); updateUI(); }
-    function tick(){ state.tiles.forEach(t=>{ if(t.crop && t.watered && t.progress < 100){ const rate = 100 / CROPS[t.crop].time; t.progress = Math.min(100, t.progress + rate); } }); if(state.fishing.step==='minigame') moveFishPointer(); save(); renderFarm(); if(document.getElementById('v-house').classList.contains('active-view')) renderHouse(); if(document.getElementById('v-bag').classList.contains('active-view')) renderBag(); }
+    <nav>
+        <div class="nav-item" onclick="showV('farm')">🏡<span>Trại</span></div>
+        <div class="nav-item" onclick="showV('fish')">🐟<span>Câu</span></div>
+        <div class="nav-item" onclick="showV('shop')">🏪<span>Chợ</span></div>
+        <div class="nav-item" onclick="showV('bag')">🎒<span>Túi</span></div>
+        <div class="nav-item" onclick="showV('house')">🏠<span>Nhà</span></div>
+    </nav>
 
-    function renderFarm(){ const grid=document.getElementById('farm-grid'); grid.innerHTML=''; state.tiles.forEach((t,i)=>{ const el=document.createElement('div'); el.className = `tile ${t.type==='tilled' ? 'tilled' : ''} ${t.watered ? 'watered' : ''}`; el.onclick=()=>handleTile(i); if(t.crop){ const crop = CROPS[t.crop]; const icon = t.progress >= 100 ? crop.icon : crop.seed; el.innerHTML = `<span style="font-size:${t.progress>=100 ? '30px' : '20px'}">${icon}</span>${t.watered && t.progress < 100 ? '<span style="position:absolute;right:4px;bottom:3px;font-size:12px;">💧</span>' : ''}`; } grid.appendChild(el); }); }
-    function handleTile(i){ const t = state.tiles[i];
-      if(t.crop){
-        if(state.curTool === 'water'){
-          t.watered = true;
-          playSound('click');
-          showToast('Đã tưới nước cho cây.');
-          renderFarm(); updateUI(); save();
-          return;
+    <script>
+        // --- DATA ---
+        const CROPS = {
+            wheat: { name: 'Lúa mì', icon: '🌾', seed: '🌱', time: 10, cost: 10, sell: 25, xp: 5 },
+            corn: { name: 'Ngô', icon: '🌽', seed: '🌿', time: 20, cost: 25, sell: 65, xp: 12 },
+            carrot: { name: 'Cà rốt', icon: '🥕', seed: '🥕', time: 15, cost: 15, sell: 40, xp: 8 },
+            potato: { name: 'Khoai tây', icon: '🥔', seed: '🥔', time: 25, cost: 20, sell: 60, xp: 10 },
+            tomato: { name: 'Cà chua', icon: '🍅', seed: '🍅', time: 30, cost: 35, sell: 100, xp: 18 },
+            pumpkin: { name: 'Bí ngô', icon: '🎃', seed: '🎃', time: 60, cost: 80, sell: 280, xp: 40 },
+            strawberry: { name: 'Dâu tây', icon: '🍓', seed: '☘️', time: 45, cost: 50, sell: 180, xp: 30 },
+            blueberry: { name: 'Việt quất', icon: '🫐', seed: '🫐', time: 50, cost: 60, sell: 220, xp: 35 },
+            watermelon: { name: 'Dưa hấu', icon: '🍉', seed: '🍉', time: 80, cost: 100, sell: 400, xp: 60 },
+            pineapple: { name: 'Dứa', icon: '🍍', seed: '🍍', time: 90, cost: 120, sell: 500, xp: 75 },
+            sunflower: { name: 'Hướng dương', icon: '🌻', seed: '🌻', time: 40, cost: 40, sell: 150, xp: 25 },
+            rose: { name: 'Hoa hồng', icon: '🌹', seed: '🌹', time: 35, cost: 45, sell: 160, xp: 28 },
+            grapes: { name: 'Nho', icon: '🍇', seed: '🍇', time: 70, cost: 90, sell: 350, xp: 55 },
+            eggplant: { name: 'Cà tím', icon: '🍆', seed: '🍆', time: 35, cost: 30, sell: 90, xp: 15 },
+            chili: { name: 'Ớt', icon: '🌶️', seed: '🌶️', time: 20, cost: 20, sell: 55, xp: 10 }
+        };
+
+        const FOOD = {
+            bread: { name: 'Bánh mì', nrg: 5, cost: 10 },
+            egg: { name: 'Trứng ốp la', nrg: 8, cost: 15 },
+            fries: { name: 'Khoai tây chiên', nrg: 10, cost: 20 },
+            burger: { name: 'Burger', nrg: 15, cost: 30 },
+            pizza: { name: 'Pizza', nrg: 25, cost: 50 },
+            sandwich: { name: 'Sandwich', nrg: 12, cost: 25 },
+            taco: { name: 'Taco', nrg: 14, cost: 28 },
+            ramen: { name: 'Mì Ramen', nrg: 20, cost: 45 },
+            sushi: { name: 'Sushi', nrg: 22, cost: 48 },
+            steak: { name: 'Bít tết', nrg: 30, cost: 70 },
+            salad: { name: 'Salad rau củ', nrg: 10, cost: 18 },
+            soup: { name: 'Súp nóng', nrg: 12, cost: 22 },
+            pho: { name: 'Phở bò', nrg: 25, cost: 55 },
+            buncha: { name: 'Bún chả', nrg: 25, cost: 55 },
+            dumpling: { name: 'Sủi cảo', nrg: 15, cost: 32 },
+            pasta: { name: 'Mì Ý', nrg: 18, cost: 38 },
+            donut: { name: 'Bánh Donut', nrg: 7, cost: 12 },
+            cake: { name: 'Bánh kem', nrg: 20, cost: 45 },
+            icecream: { name: 'Kem', nrg: 6, cost: 10 },
+            coffee: { name: 'Cà phê', nrg: 15, cost: 25 },
+            tea: { name: 'Trà đào', nrg: 10, cost: 20 },
+            juice: { name: 'Nước ép', nrg: 12, cost: 22 },
+            energy: { name: 'Nước tăng lực', nrg: 30, cost: 80 },
+            cookie: { name: 'Bánh quy', nrg: 4, cost: 8 },
+            milk: { name: 'Sữa tươi', nrg: 8, cost: 15 }
+        };
+
+        const FISH = {
+            shrimp: { name: 'Tôm', icon: '🦐', sell: 20, rare: false },
+            crab: { name: 'Cua', icon: '🦀', sell: 35, rare: false },
+            fish: { name: 'Cá chép', icon: '🐟', sell: 50, rare: false },
+            squid: { name: 'Mực', icon: '🦑', sell: 65, rare: false },
+            eel: { name: 'Lươn', icon: '🐍', sell: 80, rare: false },
+            salmon: { name: 'Cá hồi', icon: '🍣', sell: 120, rare: true },
+            tuna: { name: 'Cá ngừ', icon: '🐟', sell: 150, rare: true },
+            octopus: { name: 'Bạch tuộc', icon: '🐙', sell: 180, rare: true },
+            jellyfish: { name: 'Sứa', icon: '🪼', sell: 100, rare: false },
+            starfish: { name: 'Sao biển', icon: '⭐', sell: 90, rare: false },
+            goldfish: { name: 'Cá vàng', icon: '🐠', sell: 300, rare: true },
+            shark: { name: 'Cá mập', icon: '🦈', sell: 1000, rare: true },
+            whale: { name: 'Cá voi', icon: '🐋', sell: 2500, rare: true },
+            lobster: { name: 'Tôm hùm', icon: '🦞', sell: 400, rare: true }
+        };
+
+        const DECOR = {
+            bed: { name: 'Giường', icon: '🛏️', cost: 200 },
+            table: { name: 'Bàn ghế', icon: '🪑', cost: 150 },
+            plant: { name: 'Chậu cây', icon: '🪴', cost: 80 },
+            tv: { name: 'Tivi', icon: '📺', cost: 500 }
+        };
+
+        // --- STATE ---
+        let state = {
+            gold: 150,
+            nrg: 30,
+            lvl: 1,
+            xp: 0,
+            inv: { hoe: { dur: 20, max: 20 }, rod: { dur: 10, max: 10 } },
+            bag: { wheat_seed: 5 },
+            storage: {},
+            tiles: Array(12).fill(null).map(() => ({ type: 'grass', crop: null, progress: 0, watered: false })),
+            curTool: 'hoe',
+            shopTab: 'seed',
+            fishing: { step: 'idle', pointerPos: 0, dir: 1, speed: 1.5 }, // Speed increased
+            house: { level: 1, items: [], mode: 'place' }
+        };
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            const saved = localStorage.getItem('minefarm_promax');
+            if (saved) state = JSON.parse(saved);
+            renderAll();
+            setInterval(tick, 1000);
         }
-        if(state.curTool === 'harvest'){
-          if(t.progress >= 100){
-            state.storage[t.crop] = (state.storage[t.crop] || 0) + 1;
-            addXp(CROPS[t.crop].xp);
-            t.crop = null; t.progress = 0; t.watered = false;
-            playSound('success'); showToast('Thu hoạch thành công!');
-            renderFarm(); updateUI(); save();
-          }else{
-            showToast('Cây chưa chín để thu hoạch.');
-          }
-          return;
+
+        function save() {
+            localStorage.setItem('minefarm_promax', JSON.stringify(state));
         }
-        showPop(i);
-        return;
-      }
-      if(state.curTool === 'hoe' && t.type === 'grass'){
-        if(state.inv.hoe.dur <= 0){ showToast('Cuốc hỏng rồi, mua cái mới nhé.'); return; }
-        t.type = 'tilled'; state.inv.hoe.dur--; playSound('click');
-      }else if(state.curTool === 'water' && t.type === 'tilled'){
-        showToast('Hãy gieo hạt trước rồi mới tưới.');
-      }else if(state.curTool.endsWith('_seed')){
-        const cropId = state.curTool.replace('_seed','');
-        if(t.type === 'tilled' && !t.crop && (state.bag[state.curTool] || 0) > 0){ t.crop = cropId; t.progress = 0; t.watered = false; state.bag[state.curTool]--; playSound('click'); showToast('Đã gieo ' + CROPS[cropId].name); }
-      }
-      renderFarm(); renderBag(); updateUI(); save();
-    }
 
-    function handleFishClick(){ if(!state.inv.rod || state.inv.rod.dur <= 0){ showToast('Cần câu hỏng hoặc chưa có cần.'); return; } if(state.fishing.step === 'idle'){ state.fishing.step='waiting'; document.getElementById('fish-hint').innerText='Đang chờ...'; setTimeout(()=>{ if(state.fishing.step==='waiting'){ state.fishing.step='bite'; document.getElementById('fish-alert').style.display='block'; document.getElementById('fish-hint').innerText='CÁ CẮN! CHẠM!'; playSound('tink'); } }, 2000 + Math.random() * 3000); } else if(state.fishing.step==='bite'){ state.fishing.step='minigame'; document.getElementById('fish-alert').style.display='none'; document.getElementById('fish-bar-container').style.display='block'; document.getElementById('fish-hint').innerText='CHẠM KHI KIM Ở VÙNG XANH!'; } else if(state.fishing.step==='minigame'){ const p=state.fishing.pointerPos; if(p>=35 && p<=65){ const keys=Object.keys(FISH); const caught=keys[Math.floor(Math.random()*keys.length)]; state.storage[caught]=(state.storage[caught]||0)+1; state.inv.rod.dur--; playSound('success'); showToast('Bắt được: ' + FISH[caught].name); } else { playSound('fail'); showToast('Hụt rồi, tiếc quá.'); } resetFish(); updateUI(); save(); renderBag(); }
-    }
-    function moveFishPointer(){ state.fishing.pointerPos += 5 * state.fishing.dir; if(state.fishing.pointerPos >= 100 || state.fishing.pointerPos <= 0){ state.fishing.dir *= -1; state.fishing.pointerPos = Math.max(0, Math.min(100, state.fishing.pointerPos)); } document.getElementById('fish-pointer').style.left = state.fishing.pointerPos + '%'; }
-    function resetFish(){ state.fishing.step='idle'; state.fishing.pointerPos=0; state.fishing.dir=1; document.getElementById('fish-bar-container').style.display='none'; document.getElementById('fish-alert').style.display='none'; document.getElementById('fish-hint').innerText='Chạm để thả mồi'; }
+        function renderAll() {
+            updateStats();
+            renderFarm();
+            renderBag();
+            renderShop();
+            renderHouse();
+        }
 
-    function switchShop(tab){ state.shopTab=tab; renderShop(); }
-    function renderShop(){ const content=document.getElementById('shop-content'); document.querySelectorAll('#shop-tabs .tab').forEach(t=>t.classList.remove('active')); const activeTab = Array.from(document.querySelectorAll('#shop-tabs .tab')).find(t => t.textContent.includes({seed:'Hạt',food:'Đồ ăn',tool:'Đồ nghề',decor:'Nội thất',sell:'Bán'}[state.shopTab])); if(activeTab) activeTab.classList.add('active'); let html=''; if(state.shopTab==='seed'){ html += '<div class="shop-card">'; for(const id in CROPS){ html += `<div class="item-row"><span>${CROPS[id].icon} Hạt ${CROPS[id].name} <span class="muted">(${CROPS[id].cost}💰)</span></span><button class="btn" onclick="buy('${id}_seed', ${CROPS[id].cost})">Mua</button></div>`; } html += '</div>'; } else if(state.shopTab==='food'){ html += '<div class="shop-card">'; for(const id in FOOD){ html += `<div class="item-row"><span>${FOOD[id].name} <span class="muted">(+${FOOD[id].nrg}⚡) - ${FOOD[id].cost}💰</span></span><button class="btn" onclick="buyFood('${id}')">Mua & Ăn</button></div>`; } html += '</div>'; } else if(state.shopTab==='tool'){ html += '<div class="shop-card">'; html += `<div class="item-row"><span>⛏️ Mua Cuốc mới <span class="muted">(50💰)</span></span><button class="btn" onclick="buyTool('hoe', 50)">Mua</button></div>`; html += `<div class="item-row"><span>🎣 Mua Cần câu mới <span class="muted">(100💰)</span></span><button class="btn" onclick="buyTool('rod', 100)">Mua</button></div>`; html += '</div>'; } else if(state.shopTab==='decor'){ html += '<div class="shop-card">'; for(const id in DECOR){ const d=DECOR[id]; html += `<div class="item-row"><span>${d.icon} ${d.name} <span class="muted">(${d.cost}💰, ${d.w}x${d.h})</span><br><span class="muted">${d.desc}</span></span><button class="btn" onclick="buyDecor('${id}')">Mua</button></div>`; } html += '</div>'; } else if(state.shopTab==='sell'){ html += '<div class="shop-card">'; let hasAnything=false; for(const id in state.storage){ if((state.storage[id] || 0) > 0){ hasAnything=true; const p=CROPS[id]?.sell || FISH[id]?.sell || 0; html += `<div class="item-row"><span>${id} x${state.storage[id]} <span class="muted">(${p}💰/cái)</span></span><button class="btn warn" onclick="sell('${id}', ${p})">Bán hết (+${state.storage[id] * p}💰)</button></div>`; } } if(!hasAnything) html += '<div class="empty-state">Chưa có gì để bán.</div>'; html += '</div>'; } content.innerHTML = html; }
-    function buy(id, price){ if(state.gold >= price){ state.gold -= price; state.bag[id] = (state.bag[id] || 0) + 1; playSound('success'); showToast('Đã mua ' + id.replace('_', ' ')); updateUI(); renderShop(); renderBag(); renderHouse(); save(); } else showToast('Không đủ vàng.'); }
-    function buyFood(id){ if(state.gold >= FOOD[id].cost){ state.gold -= FOOD[id].cost; state.nrg = Math.min(30, state.nrg + FOOD[id].nrg); playSound('success'); showToast('Đã dùng ' + FOOD[id].name); updateUI(); renderShop(); save(); } else showToast('Không đủ vàng.'); }
-    function buyTool(type, price){ if(state.gold >= price){ state.gold -= price; state.inv[type] = { dur: type==='hoe' ? 20 : 10, max: type==='hoe' ? 20 : 10 }; playSound('success'); showToast('Đã mua ' + (type==='hoe' ? 'cuốc' : 'cần câu')); updateUI(); renderShop(); save(); } else showToast('Không đủ vàng.'); }
-    function buyDecor(id){ const d=DECOR[id]; if(state.gold >= d.cost){ state.gold -= d.cost; state.bag[id] = (state.bag[id] || 0) + 1; playSound('success'); showToast('Đã mua ' + d.name); renderBag(); renderHouse(); updateUI(); save(); } else showToast('Không đủ vàng.'); }
-    function sell(id, price){ state.gold += (state.storage[id] || 0) * price; state.storage[id] = 0; playSound('success'); showToast('Đã bán ' + id); updateUI(); renderShop(); renderBag(); save(); }
+        function updateStats() {
+            document.getElementById('m-gold').innerText = state.gold;
+            document.getElementById('m-nrg').innerText = state.nrg;
+            document.getElementById('m-lvl').innerText = state.lvl;
+            document.getElementById('rod-status').innerText = state.inv.rod.dur > 0 ? `Cần câu: ${state.inv.rod.dur} độ bền` : "Cần hỏng!";
+        }
 
-    function renderBag(){ const list=document.getElementById('bag-list'); let html=''; html += '<div class="section-label">Hạt giống</div>'; let seedCount=0; for(const id in state.bag){ const count = state.bag[id] || 0; if(count > 0 && id.endsWith('_seed')){ seedCount++; const cropId = id.replace('_seed',''); html += `<div class="item-row"><span>${CROPS[cropId].seed} ${CROPS[cropId].name} <span class="muted">x${count}</span></span><button class="btn" onclick="selectT('${id}')">Chọn gieo</button></div>`; } } if(!seedCount) html += '<div class="empty-state">Chưa có hạt giống nào.</div>'; html += '<div class="section-label" style="margin-top:12px;">Nội thất</div>'; let decorCount=0; for(const id in state.bag){ const count = state.bag[id] || 0; if(count > 0 && DECOR[id]){ decorCount++; const d=DECOR[id]; html += `<div class="item-row"><span>${d.icon} ${d.name} <span class="muted">x${count}</span></span><button class="btn" onclick="selectFurniture('${id}')">Chọn đặt</button></div>`; } } if(!decorCount) html += '<div class="empty-state" style="margin-top:10px;">Chưa có nội thất nào.</div>'; html += '<div class="section-label" style="margin-top:12px;">Thành phẩm</div>'; let hasStorage=false; for(const id in state.storage){ const count=state.storage[id] || 0; if(count > 0){ hasStorage=true; const label = CROPS[id]?.name || FISH[id]?.name || id; const icon = CROPS[id]?.icon || FISH[id]?.icon || '📦'; html += `<div class="item-row"><span>${icon} ${label} <span class="muted">x${count}</span></span><span class="tiny muted">${CROPS[id]?.sell || FISH[id]?.sell || 0}💰</span></div>`; } } if(!hasStorage) html += '<div class="empty-state" style="margin-top:10px;">Chưa có nông sản hay cá nào.</div>'; list.innerHTML = html; refreshBagSelectedText(); }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 2000);
+        }
 
-    function selectT(t){ state.curTool = t; state.house.selected = null; document.getElementById('cur-tool-name').innerText = getToolLabel(t); showV('farm'); refreshBagSelectedText(); save(); }
+        function tick() {
+            state.tiles.forEach(t => {
+                if (t.crop && t.watered && t.progress < 100) {
+                    t.progress += (100 / CROPS[t.crop].time);
+                    if (t.progress > 100) t.progress = 100;
+                }
+            });
+            if (state.fishing.step === 'minigame') moveFishPointer();
+            renderFarm();
+            save();
+        }
 
-    function setHouseMode(mode){ state.house.mode = mode; document.getElementById('mode-place').classList.toggle('active', mode === 'place'); document.getElementById('mode-retrieve').classList.toggle('active', mode === 'retrieve'); document.getElementById('mode-play').classList.toggle('active', mode === 'play'); refreshHouseHint(); renderHouse(); save(); }
-    function clearHouseSelection(){ state.house.selected = null; refreshHouseHint(); updateSelectedHouseLabel(); renderHouse(); save(); showToast('Đã bỏ chọn nội thất.'); refreshBagSelectedText(); }
-    function selectFurniture(id){ if((state.bag[id] || 0) <= 0){ showToast('Không còn món này trong túi.'); return; } state.house.selected = id; state.house.mode = 'place'; document.getElementById('mode-place').classList.add('active'); document.getElementById('mode-retrieve').classList.remove('active'); document.getElementById('mode-play').classList.remove('active'); refreshHouseHint(); updateSelectedHouseLabel(); renderHouse(); save(); showToast('Đã chọn: ' + DECOR[id].name); refreshBagSelectedText(); }
-    function refreshHouseHint(){ const hint=document.getElementById('house-hint-text'); if(state.house.mode==='retrieve'){ hint.textContent='Chạm vào món nội thất để thu hồi về túi.'; } else if(state.house.mode==='play'){ hint.textContent='Chạm vào giường để ngủ, tủ kính để xem cá hiếm.'; } else { hint.textContent = state.house.selected ? ('Đã chọn ' + DECOR[state.house.selected].name + '. Chạm vào ô trống trong nhà để đặt.') : 'Chọn một món trong túi, rồi chạm vào ô trống để đặt.'; } }
-    function upgradeHouse(){ const next = state.house.level + 1; const nextCfg = HOUSE_LEVELS[next]; if(!nextCfg){ showToast('Nhà đã đạt cấp tối đa.'); return; } if(state.lvl < nextCfg.reqLvl){ showToast(`Cần Lv.${nextCfg.reqLvl} để nâng cấp.`); return; } if(state.gold < nextCfg.cost){ showToast('Không đủ vàng để nâng cấp.'); return; } state.gold -= nextCfg.cost; state.house.level = next; playSound('success'); showToast('Nhà đã nâng cấp lên: ' + nextCfg.name); updateUI(); renderHouse(); save(); }
-    function getHouseOccupancyMap(){ const map = new Map(); state.house.items.forEach((it, idx) => { const d = DECOR[it.id]; for(let y=0;y<d.h;y++) for(let x=0;x<d.w;x++) map.set(`${it.x + x},${it.y + y}`, idx); }); return map; }
-    function canPlaceFurniture(def, x, y){ const size=houseGridSize(); if(def.place==='wall' && y!==0) return { ok:false, reason:'Vật này chỉ đặt ở hàng tường phía trên.' }; if(x<0 || y<0 || x + def.w > size || y + def.h > size) return { ok:false, reason:'Không đủ chỗ trong ô này.' }; const occ = getHouseOccupancyMap(); for(let dy=0;dy<def.h;dy++) for(let dx=0;dx<def.w;dx++) if(occ.has(`${x+dx},${y+dy}`)) return { ok:false, reason:'Ô này đang bị chiếm.' }; return { ok:true }; }
-    function handleHouseCell(x,y){ if(state.house.mode==='place'){ if(!state.house.selected){ showToast('Chọn một món nội thất trước.'); return; } placeFurnitureAt(state.house.selected, x, y); return; } if(state.house.mode==='retrieve'){ const idx=findFurnitureAt(x,y); if(idx>=0) retrieveFurniture(idx); else showToast('Không có nội thất ở ô này.'); } }
-    function findFurnitureAt(x,y){ for(let i=state.house.items.length-1;i>=0;i--){ const it=state.house.items[i]; const d=DECOR[it.id]; if(x>=it.x && x < it.x + d.w && y>=it.y && y < it.y + d.h) return i; } return -1; }
-    function placeFurnitureAt(id,x,y){ const def=DECOR[id]; if((state.bag[id] || 0) <= 0){ showToast('Hết món này trong túi.'); return; } const check = canPlaceFurniture(def,x,y); if(!check.ok){ showToast(check.reason); return; } state.house.items.push({ id,x,y }); state.bag[id]--; playSound('tink'); showToast('Đã đặt ' + def.name); renderHouse(); renderBag(); updateUI(); save(); const cell=document.querySelector(`[data-cell="${x}-${y}"]`); if(cell) spawnPlaceFx(cell); }
-    function retrieveFurniture(idx){ const item=state.house.items[idx]; const def=DECOR[item.id]; state.bag[item.id] = (state.bag[item.id] || 0) + 1; state.house.items.splice(idx,1); playSound('click'); showToast('Đã thu hồi ' + def.name); renderHouse(); renderBag(); updateUI(); save(); }
-    function spawnPlaceFx(cell){ const fx=document.createElement('div'); fx.className='place-fx'; fx.textContent='☁'; cell.appendChild(fx); setTimeout(()=>fx.remove(), 600); }
-    function sleepInBed(){ state.nrg = 30; playSound('success'); showToast('Ngủ ngon! Năng lượng đã đầy.'); updateUI(); save(); }
-    function showCabinetContents(){ const rare = Object.keys(FISH).filter(id => (state.storage[id] || 0) > 0); const list = rare.length ? rare.map(id => `• ${FISH[id].icon} ${FISH[id].name}: x${state.storage[id]}`).join('<br>') : 'Chưa có cá nào để trưng bày.'; openPop({ title:'Tủ kính cá hiếm', progress:'', status:'Những gì bạn đã câu được sẽ được trưng bày ở đây.', body:list }); }
-    function handleFurnitureClick(idx){ const item=state.house.items[idx]; const def=DECOR[item.id]; if(state.house.mode==='retrieve'){ retrieveFurniture(idx); return; } if(state.house.mode==='play'){ if(def.action==='sleep') sleepInBed(); else if(def.action==='cabinet') showCabinetContents(); else showToast(def.name + ' chỉ để trang trí.'); } }
-    function renderHouse(){ const size = houseGridSize(); const grid = document.getElementById('house-grid'); grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`; grid.innerHTML=''; const occ = getHouseOccupancyMap(); const totalCells = size * size; const usedCells = state.house.items.reduce((sum, item)=>sum + DECOR[item.id].w * DECOR[item.id].h, 0); document.getElementById('house-capacity-fill').style.width = `${Math.min(100, usedCells / totalCells * 100)}%`; document.getElementById('house-capacity-text').textContent = `${usedCells} / ${totalCells} ô`; const cfg = houseCfg(); document.getElementById('house-title').textContent = `${cfg.icon} ${cfg.name}`; document.getElementById('house-level-name').textContent = cfg.name; document.getElementById('house-size-text').textContent = `Kích thước: ${cfg.size}x${cfg.size}`; document.getElementById('house-upgrade-text').textContent = state.house.level >= 3 ? 'Đã đạt cấp tối đa' : `Cần Lv.${HOUSE_LEVELS[state.house.level + 1].reqLvl} và ${HOUSE_LEVELS[state.house.level + 1].cost}💰`; for(let y=0;y<size;y++){ for(let x=0;x<size;x++){ const cell=document.createElement('div'); cell.className='house-cell'; cell.dataset.cell = `${x}-${y}`; if(occ.has(`${x},${y}`)) cell.classList.add('occupied'); if(state.house.mode==='place' && state.house.selected){ const def = DECOR[state.house.selected]; cell.classList.add(canPlaceFurniture(def, x, y).ok ? 'placeable' : 'invalid'); } cell.onclick = () => handleHouseCell(x, y); grid.appendChild(cell); } } state.house.items.forEach((item, idx)=>{ const def=DECOR[item.id]; const el=document.createElement('div'); el.className = `furn-item furn-${item.id}`; el.style.gridColumn = `${item.x + 1} / span ${def.w}`; el.style.gridRow = `${item.y + 1} / span ${def.h}`; el.innerHTML = `<div class="furn-emoji">${def.icon}</div><div class="furn-label">${def.name}</div>`; el.onclick = e => { e.stopPropagation(); handleFurnitureClick(idx); }; grid.appendChild(el); }); renderHouseInventory(); updateSelectedHouseLabel(); refreshHouseHint(); }
-    function renderHouseInventory(){ const wrap=document.getElementById('house-inventory'); let html=''; const available = Object.keys(DECOR).filter(id => (state.bag[id] || 0) > 0); if(!available.length){ wrap.innerHTML = '<div class="empty-state">Chưa có nội thất nào trong túi. Mua ở tab Nội thất trong chợ.</div>'; return; } available.forEach(id => { const d = DECOR[id]; html += `<div class="item-row"><span>${d.icon} ${d.name} <span class="muted">x${state.bag[id]}</span></span><button class="btn" onclick="selectFurniture('${id}')">Chọn</button></div>`; }); wrap.innerHTML = html; }
+        // --- FARM ---
+        function renderFarm() {
+            const grid = document.getElementById('farm-grid');
+            grid.innerHTML = '';
+            state.tiles.forEach((t, i) => {
+                const el = document.createElement('div');
+                el.className = `tile ${t.type === 'tilled' ? 'tilled' : ''} ${t.watered ? 'watered' : ''}`;
+                el.onclick = () => handleTile(i);
+                if (t.crop) {
+                    el.innerHTML = `<span>${t.progress >= 100 ? CROPS[t.crop].icon : CROPS[t.crop].seed}</span>`;
+                }
+                grid.appendChild(el);
+            });
+        }
 
-    function showV(id){ document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view')); document.getElementById('v-' + id).classList.add('active-view'); if(id==='shop') renderShop(); if(id==='bag') renderBag(); if(id==='house') renderHouse(); }
-    function openPop({title, progress, status, body}){ document.getElementById('pop-title').innerText = title || 'Thông tin'; document.getElementById('pop-progress').innerText = progress || ''; document.getElementById('pop-status').innerText = status || ''; document.getElementById('pop-body').innerHTML = body || ''; document.getElementById('info-popup').style.display = 'block'; }
-    function showPop(i){ const t=state.tiles[i]; const crop = CROPS[t.crop]; const ready = t.progress >= 100; const status = ready ? 'Cây đã trưởng thành, có thể thu hoạch.' : (t.watered ? 'Cây đang lớn tốt sau khi được tưới.' : 'Cây đang khô, hãy tưới để tiếp tục lớn.'); openPop({ title: crop.name, progress: `Tiến độ: ${Math.floor(t.progress)}%`, status, body:`<div class="tiny muted">${ready ? 'Nhấn chế độ Thu hoạch để nhận ' : 'Thu hoạch xong sẽ nhận '} ${crop.xp} XP.</div>` }); }
-    function closePop(){ document.getElementById('info-popup').style.display='none'; }
+        function handleTile(i) {
+            const t = state.tiles[i];
+            if (state.curTool === 'hoe' && t.type === 'grass') {
+                t.type = 'tilled';
+            } else if (state.curTool === 'water' && t.type === 'tilled') {
+                t.watered = true;
+            } else if (state.curTool.endsWith('_seed')) {
+                const cId = state.curTool.replace('_seed', '');
+                if (t.type === 'tilled' && !t.crop && state.bag[state.curTool] > 0) {
+                    t.crop = cId;
+                    t.progress = 0;
+                    state.bag[state.curTool]--;
+                }
+            } else if (state.curTool === 'harvest' && t.crop && t.progress >= 100) {
+                state.storage[t.crop] = (state.storage[t.crop] || 0) + 1;
+                state.xp += CROPS[t.crop].xp;
+                t.crop = null;
+                t.watered = false;
+                checkLevel();
+            }
+            renderAll();
+        }
 
-    function updateUI(){ document.getElementById('m-gold').innerText = state.gold; document.getElementById('m-nrg').innerText = state.nrg; document.getElementById('m-lvl').innerText = state.lvl; document.getElementById('rod-status').innerText = state.inv.rod.dur > 0 ? `Cần câu: Độ bền ${state.inv.rod.dur}/${state.inv.rod.max}` : 'Cần câu đã hỏng!'; document.getElementById('cur-tool-name').innerText = getToolLabel(state.curTool); document.getElementById('tool-dur-text').innerText = `⛏️ ${state.inv.hoe.dur}/${state.inv.hoe.max} | 🎣 ${state.inv.rod.dur}/${state.inv.rod.max}`; if(document.getElementById('house-level-name')){ const cfg=houseCfg(); document.getElementById('house-level-name').textContent = cfg.name; document.getElementById('house-title').textContent = `${cfg.icon} ${cfg.name}`; } refreshBagSelectedText(); }
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    function load(){ const s = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('minefarm_ultra_v2') || localStorage.getItem('minefarm_ultra_v3'); if(s){ try{ state = JSON.parse(s); }catch(e){ state = defaultState(); } } }
+        function selectT(t) {
+            state.curTool = t;
+            document.getElementById('cur-tool-name').innerText = t;
+            showToast("Đã chọn " + t);
+        }
 
-    init();
-  </script>
+        function checkLevel() {
+            const req = state.lvl * 100;
+            if (state.xp >= req) {
+                state.lvl++;
+                state.xp = 0;
+                showToast("LÊN CẤP: " + state.lvl);
+            }
+        }
+
+        // --- FISHING ---
+        function handleFishClick() {
+            if (state.inv.rod.dur <= 0) return showToast("Cần hỏng!");
+            
+            if (state.fishing.step === 'idle') {
+                state.fishing.step = 'waiting';
+                document.getElementById('fish-hint').innerText = "Đang chờ cá...";
+                setTimeout(() => {
+                    if (state.fishing.step === 'waiting') {
+                        state.fishing.step = 'bite';
+                        document.getElementById('fish-alert').style.display = 'block';
+                        document.getElementById('fish-hint').innerText = "CÁ CẮN! CHẠM NGAY!";
+                    }
+                }, 1000 + Math.random() * 3000);
+            } else if (state.fishing.step === 'bite') {
+                state.fishing.step = 'minigame';
+                document.getElementById('fish-alert').style.display = 'none';
+                document.getElementById('fish-bar-container').style.display = 'block';
+            } else if (state.fishing.step === 'minigame') {
+                const p = state.fishing.pointerPos;
+                if (p >= 42.5 && p <= 57.5) {
+                    const keys = Object.keys(FISH);
+                    const caught = keys[Math.floor(Math.random() * keys.length)];
+                    state.storage[caught] = (state.storage[caught] || 0) + 1;
+                    state.inv.rod.dur--;
+                    showToast("Bắt được: " + FISH[caught].name + " " + FISH[caught].icon);
+                } else {
+                    showToast("Hụt rồi!");
+                }
+                resetFish();
+            }
+        }
+
+        function moveFishPointer() {
+            // SPEED: increased for difficulty
+            state.fishing.pointerPos += (8 * state.fishing.dir); 
+            if (state.fishing.pointerPos >= 100 || state.fishing.pointerPos <= 0) state.fishing.dir *= -1;
+            document.getElementById('fish-pointer').style.left = state.fishing.pointerPos + '%';
+        }
+
+        function resetFish() {
+            state.fishing.step = 'idle';
+            state.fishing.pointerPos = 0;
+            document.getElementById('fish-bar-container').style.display = 'none';
+            document.getElementById('fish-hint').innerText = "Chạm để thả mồi";
+            updateStats();
+        }
+
+        // --- SHOP & BAG ---
+        function switchShop(t) {
+            state.shopTab = t;
+            renderShop();
+        }
+
+        function renderShop() {
+            const content = document.getElementById('shop-content');
+            let html = '<div class="card">';
+            
+            if (state.shopTab === 'seed') {
+                for (let id in CROPS) {
+                    html += `<div class="item-row">${CROPS[id].icon} ${CROPS[id].name} (${CROPS[id].cost}💰) 
+                    <button class="btn" onclick="buy('seed','${id}')">Mua</button></div>`;
+                }
+            } else if (state.shopTab === 'food') {
+                for (let id in FOOD) {
+                    html += `<div class="item-row">${FOOD[id].name} (+${FOOD[id].nrg}⚡ - ${FOOD[id].cost}💰) 
+                    <button class="btn" onclick="buy('food','${id}')">Ăn</button></div>`;
+                }
+            } else if (state.shopTab === 'sell') {
+                for (let id in state.storage) {
+                    if (state.storage[id] > 0) {
+                        const price = (CROPS[id]?.sell || FISH[id]?.sell || 0);
+                        html += `<div class="item-row">${id} x${state.storage[id]} 
+                        <button class="btn warn" onclick="sell('${id}', ${price})">Bán (+${state.storage[id]*price}💰)</button></div>`;
+                    }
+                }
+            } else if (state.shopTab === 'tool') {
+                html += `<div class="item-row">⛏️ Cuốc mới (50💰) <button class="btn" onclick="buyTool('hoe')">Mua</button></div>`;
+                html += `<div class="item-row">🎣 Cần mới (100💰) <button class="btn" onclick="buyTool('rod')">Mua</button></div>`;
+            }
+            
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function buy(type, id) {
+            const item = type === 'seed' ? CROPS[id] : FOOD[id];
+            if (state.gold >= item.cost) {
+                state.gold -= item.cost;
+                if (type === 'seed') {
+                    state.bag[id + '_seed'] = (state.bag[id + '_seed'] || 0) + 1;
+                    showToast("Đã mua hạt giống");
+                } else {
+                    state.nrg = Math.min(30, state.nrg + item.nrg);
+                    showToast("Đã ăn " + item.name);
+                }
+                renderAll();
+            } else showToast("Hết tiền!");
+        }
+
+        function buyTool(t) {
+            const cost = t === 'hoe' ? 50 : 100;
+            if (state.gold >= cost) {
+                state.gold -= cost;
+                state.inv[t].dur = state.inv[t].max;
+                renderAll();
+            }
+        }
+
+        function sell(id, price) {
+            state.gold += state.storage[id] * price;
+            state.storage[id] = 0;
+            renderAll();
+        }
+
+        function renderBag() {
+            const list = document.getElementById('bag-list');
+            let html = '';
+            for (let id in state.bag) {
+                if (state.bag[id] > 0) {
+                    html += `<div class="item-row"><span>${id} x${state.bag[id]}</span> 
+                    <button class="btn" onclick="selectT('${id}')">Dùng</button></div>`;
+                }
+            }
+            list.innerHTML = html || 'Túi trống';
+        }
+
+        // --- HOUSE ---
+        function renderHouse() {
+            const grid = document.getElementById('house-grid');
+            grid.innerHTML = '';
+            const size = state.house.level * 4;
+            grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'house-cell';
+                grid.appendChild(cell);
+            }
+        }
+
+        function showV(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
+            document.getElementById('v-' + v).classList.add('active-view');
+        }
+
+        function closePop() { document.getElementById('info-popup').style.display = 'none'; }
+
+        init();
+    </script>
 </body>
 </html>
