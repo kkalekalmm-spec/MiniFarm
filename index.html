@@ -3,169 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MineFarm: Dream Life</title>
+    <title>MineFarm: Bảo Hân's Adventure</title>
     <style>
         :root {
-            --bg-sky: #87CEEB; --grass: #7cfc00; --dirt: #8B4513;
-            --panel: #fdf5e6; --accent: #ff69b4; --border: #5d4037;
+            --primary: #6ab04c; --dark: #2f3640; --gold: #f1c40f;
+            --ui-bg: #f5f6fa; --border: #353b48;
         }
 
         body {
-            margin: 0; padding: 0; background: var(--bg-sky);
+            margin: 0; padding: 0; background: #87ceeb;
             font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
             user-select: none; touch-action: manipulation;
         }
 
-        /* Stats Bar */
-        #top-bar {
-            background: rgba(255,255,255,0.9); height: 50px;
+        /* Header & Stats */
+        #top-ui {
+            background: rgba(0,0,0,0.8); color: white; height: 60px;
             display: flex; justify-content: space-around; align-items: center;
-            border-bottom: 3px solid var(--border); font-weight: bold; color: #333;
+            font-size: 14px; border-bottom: 3px solid var(--gold); z-index: 100;
         }
 
-        /* Main Viewport */
-        .view { display: none; height: calc(100vh - 120px); overflow-y: auto; padding: 15px; position: relative; }
-        .active-view { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* View Management */
+        .view { display: none; height: calc(100vh - 130px); overflow-y: auto; padding: 15px; background: rgba(255,255,255,0.4); }
+        .active-view { display: block; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Farm Grid */
-        #farm-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-            max-width: 400px; margin: 10px auto;
+        /* Farm & Fishing Area */
+        #farm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 360px; margin: auto; }
+        .tile { aspect-ratio: 1/1; background: #44bd32; border-radius: 6px; border-bottom: 4px solid #2f364022; display: flex; justify-content: center; align-items: center; position: relative; }
+        .tile.tilled { background: #714d32; }
+        .tile.watered { box-shadow: inset 0 0 12px #00a8ff; border: 1px solid #00a8ff; }
+        
+        #fishing-zone { 
+            height: 200px; background: #0097e6; border-radius: 20px; 
+            margin: 20px auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 5px solid white; position: relative; overflow: hidden;
         }
-        .tile {
-            aspect-ratio: 1/1; background: #55a630; border-radius: 8px;
-            display: flex; justify-content: center; align-items: center;
-            position: relative; border-bottom: 5px solid #2d5a27;
-        }
-        .tile.tilled { background: var(--dirt); }
-        .tile.watered { background: #5d3a1a; box-shadow: inset 0 0 15px #3498db; }
-        .tile.pest::after { content: '🐛'; position: absolute; top: 2px; right: 2px; font-size: 12px; }
+        .water-anim { position: absolute; width: 200%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: wave 3s infinite; }
+        @keyframes wave { from { left: -100%; } to { left: 100%; } }
 
-        /* House Visuals (Cafe Style) */
-        #house-display {
-            width: 100%; height: 220px; background: #fff; border: 4px solid var(--border);
-            border-radius: 20px; position: relative; overflow: hidden;
-            background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
-        }
-        .house-art { font-size: 100px; text-align: center; margin-top: 40px; }
-        .garden-deco { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-around; font-size: 30px; }
+        /* Shop Tabs */
+        .shop-tabs { display: flex; overflow-x: auto; gap: 5px; padding-bottom: 10px; }
+        .tab-btn { background: white; border: 2px solid var(--border); padding: 5px 12px; border-radius: 15px; white-space: nowrap; font-size: 12px; }
+        .tab-btn.active { background: var(--gold); color: black; }
 
-        /* Crop Popup */
-        #status-popup {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--panel); border: 4px solid var(--border); border-radius: 15px;
-            padding: 20px; width: 250px; z-index: 100; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
+        /* Card & UI Elements */
+        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 2px solid var(--border); }
+        .quest-card { border-left: 8px solid var(--gold); }
+        .btn { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; box-shadow: 0 3px #44802c; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* Buttons & UI */
-        .nav-bar {
-            position: fixed; bottom: 0; width: 100%; height: 70px;
-            background: #fff; border-top: 4px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center;
-        }
-        .nav-btn { font-size: 28px; transition: transform 0.2s; }
-        .nav-btn:active { transform: scale(1.2); }
+        /* Navigation */
+        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 4px solid var(--border); }
+        .nav-item { font-size: 24px; text-align: center; }
+        .nav-item span { display: block; font-size: 10px; color: #666; }
 
-        .btn {
-            background: var(--accent); color: white; border: none; padding: 10px 15px;
-            border-radius: 10px; font-weight: bold; margin: 5px; box-shadow: 0 4px #c2185b;
-        }
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px #c2185b; }
-
-        .floating-notif {
-            position: absolute; pointer-events: none; animation: floatUp 0.8s forwards;
-            font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
-        }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+        /* Floating Info */
+        .pop-info { position: absolute; animation: fly 1s forwards; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        
+        #fish-alert { font-size: 50px; display: none; position: absolute; z-index: 10; animation: bounce 0.5s infinite; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
     </style>
 </head>
 <body>
 
-    <div id="top-bar">
-        <span>💰 <span id="money">100</span></span>
-        <span>⭐ <span id="exp">0</span></span>
+    <div id="top-ui">
+        <span>💰 <span id="m-gold">100</span></span>
+        <span>⭐ Lv. <span id="m-lvl">1</span></span>
+        <span>⚡ <span id="m-nrg">20</span>/20</span>
     </div>
 
-    <div id="view-farm" class="view active-view">
+    <div id="v-farm" class="view active-view">
         <div id="farm-grid"></div>
-        <div style="text-align: center; margin-top: 10px;">
-            <button class="btn" onclick="useTool('hoe')">⛏️ Cuốc</button>
-            <button class="btn" onclick="useTool('water')">💧 Tưới</button>
-            <button class="btn" onclick="useTool('spray')">💨 Thuốc</button>
-            <button class="btn" onclick="useTool('fert')">🧪 Phân</button>
+        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;">
+            <button class="btn" onclick="setT('hoe')">⛏️ Cuốc</button>
+            <button class="btn" onclick="setT('water')">💧 Tưới</button>
+            <button class="btn" onclick="setT('spray')">💨 Thuốc</button>
+            <button class="btn" onclick="setT('harvest')">🧺 Thu hoạch</button>
         </div>
-        <p style="text-align: center; font-size: 12px;">Đang dùng: <b id="tool-text">Cuốc</b></p>
+        <p style="text-align: center; font-size: 12px; margin-top: 10px;">Đang chọn: <b id="tool-name">Cuốc</b></p>
     </div>
 
-    <div id="view-home" class="view">
-        <div id="house-display">
-            <div id="house-icon" class="house-art">⛺</div>
-            <div class="garden-deco">🌸🌳⛲</div>
+    <div id="v-fish" class="view">
+        <div id="fishing-zone" onclick="attemptCatch()">
+            <div class="water-anim"></div>
+            <div id="fish-alert">❗</div>
+            <div id="bobber" style="font-size: 30px;">🎣</div>
+            <p id="fish-status" style="color: white; font-weight: bold; margin-top: 10px;">Chạm để quăng cần</p>
         </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <h3 id="house-name">Túp lều lý tưởng</h3>
-            <p>Bảo Hân's Sweet Home</p>
-            <button class="btn" id="upgrade-btn" onclick="upgradeHouse()">Nâng cấp lên Quán Cafe (500💰)</button>
-        </div>
-    </div>
-
-    <div id="view-shop" class="view">
-        <div style="background: white; padding: 15px; border-radius: 15px; border: 3px solid var(--border);">
-            <h3>🏪 Chợ Sầm Uất</h3>
-            <div id="shop-items"></div>
-            <hr>
-            <h3>🧺 Bán Nông Sản</h3>
-            <div id="sell-items"></div>
+        <div class="card">
+            <h4>Thùng cá của bạn</h4>
+            <div id="fish-inv"></div>
         </div>
     </div>
 
-    <div id="view-bag" class="view">
-        <div style="background: white; padding: 15px; border-radius: 15px; border: 3px solid var(--border);">
-            <h3>🎒 Túi Đồ</h3>
-            <div id="bag-list"></div>
+    <div id="v-quest" class="view">
+        <h3>📜 Bảng Nhiệm Vụ</h3>
+        <div id="quest-list"></div>
+    </div>
+
+    <div id="v-shop" class="view">
+        <div class="shop-tabs">
+            <div class="tab-btn active" onclick="setShop('seed')">🌱 Hạt giống</div>
+            <div class="tab-btn" onclick="setShop('food')">🍱 Thức ăn</div>
+            <div class="tab-btn" onclick="setShop('tool')">🛠️ Công cụ</div>
+            <div class="tab-btn" onclick="setShop('clothes')">👕 Quần áo</div>
+        </div>
+        <div id="shop-items" style="margin-top: 10px;"></div>
+        <hr>
+        <div class="card">
+            <h4>Bán nông sản & cá</h4>
+            <div id="sell-list"></div>
         </div>
     </div>
 
-    <div id="status-popup">
-        <h3 id="pop-name">Cây trồng</h3>
-        <p>Tiến độ: <span id="pop-growth">0</span>%</p>
-        <p id="pop-water">💧 Đang khát</p>
-        <p id="pop-pest">✅ Bình thường</p>
-        <button class="btn" onclick="closePopup()">Đóng</button>
+    <div id="v-bag" class="view">
+        <h3>🎒 Hành trang</h3>
+        <div id="bag-content"></div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-btn" onclick="showView('farm')">👩‍🌾</div>
-        <div class="nav-btn" onclick="showView('home')">🏠</div>
-        <div class="nav-btn" onclick="showView('shop')">🏪</div>
-        <div class="nav-btn" onclick="showView('bag')">🎒</div>
+    <div id="nav">
+        <div class="nav-item" onclick="showV('farm')">🌾<span>Trại</span></div>
+        <div class="nav-item" onclick="showV('fish')">🐟<span>Câu cá</span></div>
+        <div class="nav-item" onclick="showV('quest')">📜<span>Nhiệm vụ</span></div>
+        <div class="nav-item" onclick="showV('shop')">🏪<span>Chợ</span></div>
+        <div class="nav-item" onclick="showV('bag')">🎒<span>Túi</span></div>
     </div>
 
     <script>
-        const CROPS = {
-            wheat: { name: 'Lúa mì', seed: '🌱', icon: '🌾', cost: 10, sell: 25, time: 5 },
-            strawberry: { name: 'Dâu tây', seed: '🧤', icon: '🍓', cost: 30, sell: 80, time: 10 },
-            grape: { name: 'Nho tím', seed: '🍇', icon: '🍇', cost: 50, sell: 150, time: 20 },
-            sunflower: { name: 'Hướng dương', seed: '🌻', icon: '🌻', cost: 100, sell: 300, time: 30 }
+        // DỮ LIỆU GỐC
+        const DATA = {
+            seeds: {
+                wheat: { name: "Lúa mì", price: 10, sell: 25, icon: "🌾", time: 5 },
+                corn: { name: "Ngô ngọt", price: 20, sell: 50, icon: "🌽", time: 10 },
+                rose: { name: "Hoa hồng", price: 50, sell: 120, icon: "🌹", time: 15 }
+            },
+            fish: {
+                carp: { name: "Cá chép", sell: 40, icon: "🐟" },
+                salmon: { name: "Cá hồi", sell: 100, icon: "🍣" },
+                shark: { name: "Cá mập", sell: 500, icon: "🦈" }
+            },
+            shop: {
+                food: [ {id: 'bread', name: 'Bánh mì', cost: 15, nrg: 5}, {id: 'juice', name: 'Nước cam', cost: 25, nrg: 10} ],
+                clothes: [ {id: 'hat', name: 'Mũ rơm', cost: 100}, {id: 'shirt', name: 'Áo thun hồng', cost: 200} ],
+                tool: [ {id: 'rod_1', name: 'Cần câu gỗ', cost: 50}, {id: 'rod_2', name: 'Cần câu xịn', cost: 300} ]
+            }
         };
 
-        const HOUSE_LVS = [
-            { name: "Túp lều lý tưởng", icon: "⛺", cost: 500 },
-            { name: "Nhà gỗ nhỏ", icon: "🏠", cost: 1500 },
-            { name: "Tiệm Cafe Sân Vườn", icon: "🏡", cost: 5000 },
-            { name: "Biệt thự Dreamy", icon: "🏰", cost: 0 }
-        ];
-
-        let game = {
-            money: 100, exp: 0, houseLv: 0,
-            inv: { wheat_s: 2, strawberry_s: 0, grape_s: 0, sunflower_s: 0 },
-            harvest: { wheat: 0, strawberry: 0, grape: 0, sunflower: 0 },
-            tiles: Array(16).fill().map(() => ({ type: 'grass', crop: null, g: 0, w: false, p: false, f: false })),
-            tool: 'hoe'
+        // TRẠNG THÁI GAME
+        let state = {
+            money: 100, lvl: 1, exp: 0, nrg: 20,
+            inv: { wheat_s: 3, rod_1: 1 },
+            storage: { wheat: 0, corn: 0, rose: 0, carp: 0, salmon: 0, shark: 0 },
+            tiles: Array(12).fill().map(() => ({ type: 'grass', crop: null, g: 0, w: false, p: false })),
+            quests: [
+                { id: 1, title: "Khởi nghiệp", desc: "Thu hoạch 3 lúa mì", target: 'wheat', qty: 3, current: 0, reward: 50, done: false },
+                { id: 2, title: "Tay câu cừ khôi", desc: "Câu được 2 con cá", target: 'fish_any', qty: 2, current: 0, reward: 80, done: false }
+            ],
+            curTool: 'hoe',
+            shopTab: 'seed',
+            fishing: { state: 'idle', timer: null }
         };
 
-        // Khởi tạo
         function init() {
             loadGame();
             renderFarm();
@@ -173,162 +173,200 @@
             setInterval(gameTick, 3000);
         }
 
-        function gameTick() {
-            game.tiles.forEach((t, i) => {
-                if (t.crop) {
-                    if (Math.random() < 0.1) t.p = true;
-                    if (t.w && !t.p) {
-                        t.g = Math.min(100, t.g + (t.f ? 20 : 10));
-                    }
-                    if (Math.random() < 0.2) t.w = false;
-                }
-            });
-            renderFarm();
-            saveGame();
-        }
-
+        // HỆ THỐNG NÔNG TRẠI
         function renderFarm() {
             const grid = document.getElementById('farm-grid');
             grid.innerHTML = '';
-            game.tiles.forEach((t, i) => {
+            state.tiles.forEach((t, i) => {
                 const el = document.createElement('div');
-                el.className = `tile ${t.type === 'tilled' ? 'tilled' : ''} ${t.w ? 'watered' : ''} ${t.p ? 'pest' : ''}`;
+                el.className = `tile ${t.type === 'tilled' ? 'tilled' : ''} ${t.w ? 'watered' : ''}`;
                 el.onclick = () => handleTile(i);
-                
                 if (t.crop) {
-                    const c = document.createElement('div');
-                    c.style.fontSize = t.g < 100 ? '20px' : '35px';
-                    c.style.opacity = t.g < 40 ? '0.5' : '1';
-                    c.innerText = t.g < 50 ? CROPS[t.crop].seed : CROPS[t.crop].icon;
-                    el.appendChild(c);
+                    el.innerHTML = `<span style="font-size:${t.g >= 100 ? '30px':'20px'}; opacity:${t.g/100+0.3}">${t.g < 50 ? '🌱' : DATA.seeds[t.crop].icon}</span>`;
                 }
                 grid.appendChild(el);
             });
         }
 
         function handleTile(i) {
-            let t = game.tiles[i];
-            
-            // Nếu có cây, ưu tiên hiện bảng thông tin trừ khi đang thu hoạch
-            if (t.crop && game.tool !== 'harvest') {
-                showPopup(i);
-                return;
-            }
-
-            if (game.tool === 'hoe' && t.type === 'grass') t.type = 'tilled';
-            else if (game.tool === 'water') t.w = true;
-            else if (game.tool === 'spray') t.p = false;
-            else if (game.tool === 'fert') t.f = true;
-            else if (game.tool.endsWith('_s')) {
-                let cType = game.tool.split('_')[0];
-                if (t.type === 'tilled' && !t.crop && game.inv[game.tool] > 0) {
-                    t.crop = cType; t.g = 0; t.w = true;
-                    game.inv[game.tool]--;
+            let t = state.tiles[i];
+            if (state.curTool === 'hoe' && t.type === 'grass') t.type = 'tilled';
+            else if (state.curTool === 'water') t.w = true;
+            else if (state.curTool.endsWith('_s')) {
+                let s = state.curTool.split('_')[0];
+                if (t.type === 'tilled' && !t.crop && state.inv[state.curTool] > 0) {
+                    t.crop = s; t.g = 0; state.inv[state.curTool]--;
                 }
             }
-            else if (t.crop && t.g >= 100) {
-                game.harvest[t.crop]++;
-                notify(i, `+1 ${CROPS[t.crop].name}`);
-                t.crop = null; t.g = 0;
+            else if (state.curTool === 'harvest' && t.crop && t.g >= 100) {
+                state.storage[t.crop]++;
+                checkQuests(t.crop, 1);
+                t.crop = null; t.g = 0; t.w = false;
+                spawnFloat(i, "Thu hoạch!");
             }
             renderFarm(); updateUI();
         }
 
-        function showPopup(i) {
-            let t = game.tiles[i];
-            document.getElementById('pop-name').innerText = CROPS[t.crop].name;
-            document.getElementById('pop-growth').innerText = t.g;
-            document.getElementById('pop-water').innerText = t.w ? "💧 Đã tưới nước" : "🌵 Cần tưới nước!";
-            document.getElementById('pop-pest').innerText = t.p ? "🐛 Có sâu bệnh!" : "✅ Cây khỏe mạnh";
-            document.getElementById('status-popup').style.display = 'block';
-        }
-
-        function upgradeHouse() {
-            let next = HOUSE_LVS[game.houseLv];
-            if (game.money >= next.cost) {
-                game.money -= next.cost;
-                game.houseLv++;
-                updateUI();
-                alert("Chúc mừng Bảo Hân đã nâng cấp nhà thành công! 🎉");
+        // HỆ THỐNG CÂU CÁ
+        function attemptCatch() {
+            const alert = document.getElementById('fish-alert');
+            const status = document.getElementById('fish-status');
+            
+            if (state.fishing.state === 'idle') {
+                if (!state.inv.rod_1 && !state.inv.rod_2) { alert("Mua cần câu đã bà ơi!"); return; }
+                state.fishing.state = 'waiting';
+                status.innerText = "Đang chờ cá cắn câu...";
+                let waitTime = 2000 + Math.random() * 4000;
+                state.fishing.timer = setTimeout(() => {
+                    state.fishing.state = 'bite';
+                    alert.style.display = 'block';
+                    status.innerText = "GIẬT NGAY!!!";
+                    // Phải giật trong vòng 1s
+                    state.fishing.timer = setTimeout(() => {
+                        if (state.fishing.state === 'bite') resetFish("Hụt rồi!");
+                    }, 1000);
+                }, waitTime);
+            } else if (state.fishing.state === 'bite') {
+                clearTimeout(state.fishing.timer);
+                let fishTypes = Object.keys(DATA.fish);
+                let caught = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+                state.storage[caught]++;
+                checkQuests('fish_any', 1);
+                resetFish(`Bắt được ${DATA.fish[caught].name}! ${DATA.fish[caught].icon}`);
             }
         }
 
-        function updateUI() {
-            document.getElementById('money').innerText = game.money;
-            document.getElementById('exp').innerText = game.exp;
-            let h = HOUSE_LVS[game.houseLv];
-            document.getElementById('house-icon').innerText = h.icon;
-            document.getElementById('house-name').innerText = h.name;
-            document.getElementById('upgrade-btn').innerText = `Nâng cấp (${HOUSE_LVS[game.houseLv].cost}💰)`;
-            if (game.houseLv >= 3) document.getElementById('upgrade-btn').style.display = 'none';
-            renderShop(); renderBag();
+        function resetFish(txt) {
+            document.getElementById('fish-alert').style.display = 'none';
+            document.getElementById('fish-status').innerText = txt;
+            state.fishing.state = 'idle';
+            updateUI();
         }
 
-        function showView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-            document.getElementById(`view-${id}`).classList.add('active-view');
+        // NHIỆM VỤ
+        function checkQuests(id, qty) {
+            state.quests.forEach(q => {
+                if (!q.done && (q.target === id || q.target === 'fish_any')) {
+                    q.current += qty;
+                    if (q.current >= q.qty) {
+                        q.done = true; state.money += q.reward;
+                        alert(`Xong nhiệm vụ: ${q.title}! Nhận ${q.reward}💰`);
+                    }
+                }
+            });
         }
 
-        function useTool(t) { game.tool = t; document.getElementById('tool-text').innerText = t; }
+        function renderQuests() {
+            const list = document.getElementById('quest-list');
+            list.innerHTML = state.quests.map(q => `
+                <div class="card quest-card" style="opacity: ${q.done ? 0.5 : 1}">
+                    <h4>${q.title} ${q.done ? '✅' : ''}</h4>
+                    <p>${q.desc}</p>
+                    <small>Tiến độ: ${q.current}/${q.qty}</small>
+                </div>
+            `).join('');
+        }
+
+        // CỬA HÀNG & TÚI ĐỒ
+        function setShop(tab) { state.shopTab = tab; renderShop(); }
 
         function renderShop() {
+            const list = document.getElementById('shop-items');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             let html = '';
-            for (let id in CROPS) {
-                html += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span>${CROPS[id].icon} Hạt ${CROPS[id].name} (${CROPS[id].cost}💰)</span>
-                    <button class="btn" onclick="buy('${id}_s', ${CROPS[id].cost})">Mua</button>
-                </div>`;
+            
+            if (state.shopTab === 'seed') {
+                for (let id in DATA.seeds) {
+                    html += `<div class="card" style="display:flex; justify-content:space-between">
+                        <span>${DATA.seeds[id].icon} ${DATA.seeds[id].name} (${DATA.seeds[id].price}💰)</span>
+                        <button class="btn" onclick="buy('${id}_s', ${DATA.seeds[id].price})">Mua</button>
+                    </div>`;
+                }
+            } else {
+                DATA.shop[state.shopTab].forEach(item => {
+                    html += `<div class="card" style="display:flex; justify-content:space-between">
+                        <span>${item.name} (${item.cost}💰)</span>
+                        <button class="btn" onclick="buy('${item.id}', ${item.cost})">Mua</button>
+                    </div>`;
+                });
             }
-            document.getElementById('shop-items').innerHTML = html;
-
-            let sellHtml = '';
-            for (let id in CROPS) {
-                if (game.harvest[id] > 0) {
-                    sellHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>${CROPS[id].icon} ${game.harvest[id]} quả</span>
-                        <button class="btn" onclick="sell('${id}', ${CROPS[id].sell})">Bán (+${game.harvest[id]*CROPS[id].sell}💰)</button>
+            list.innerHTML = html;
+            
+            // Sell list
+            let sHtml = '';
+            for (let id in state.storage) {
+                if (state.storage[id] > 0) {
+                    let price = DATA.seeds[id] ? DATA.seeds[id].sell : DATA.fish[id].sell;
+                    sHtml += `<div class="card" style="display:flex; justify-content:space-between">
+                        <span>${id} x${state.storage[id]}</span>
+                        <button class="btn" onclick="sell('${id}', ${price})">Bán hết (+${state.storage[id]*price})</button>
                     </div>`;
                 }
             }
-            document.getElementById('sell-items').innerHTML = sellHtml || 'Trống...';
+            document.getElementById('sell-list').innerHTML = sHtml || 'Chưa có gì để bán';
         }
 
         function renderBag() {
+            const bag = document.getElementById('bag-content');
             let html = '';
-            for (let id in game.inv) {
-                if (game.inv[id] > 0) {
-                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span>${id} x${game.inv[id]}</span>
-                        <button class="btn" onclick="useTool('${id}'); showView('farm')">Gieo</button>
+            for (let id in state.inv) {
+                if (state.inv[id] > 0) {
+                    html += `<div class="card" style="display:flex; justify-content:space-between">
+                        <span>${id} x${state.inv[id]}</span>
+                        <button class="btn" onclick="setT('${id}'); showV('farm')">Dùng</button>
                     </div>`;
                 }
             }
-            document.getElementById('bag-list').innerHTML = html || 'Túi trống rỗng...';
+            bag.innerHTML = html || 'Túi trống';
         }
 
+        // LOGIC CHUNG
+        function gameTick() {
+            state.tiles.forEach(t => { if (t.crop && t.w && t.g < 100) t.g += 10; });
+            renderFarm(); saveGame();
+        }
+
+        function showV(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById('v-'+id).classList.add('active-view');
+            if(id === 'quest') renderQuests();
+            if(id === 'shop') renderShop();
+            if(id === 'bag') renderBag();
+        }
+
+        function setT(t) { state.curTool = t; document.getElementById('tool-name').innerText = t; }
+
         function buy(id, price) {
-            if (game.money >= price) { game.money -= price; game.inv[id]++; updateUI(); }
+            if (state.money >= price) { 
+                state.money -= price; 
+                state.inv[id] = (state.inv[id] || 0) + 1; 
+                updateUI(); renderShop(); 
+            }
         }
 
         function sell(id, price) {
-            game.money += game.harvest[id] * price;
-            game.harvest[id] = 0; updateUI();
+            state.money += state.storage[id] * price;
+            state.storage[id] = 0; updateUI(); renderShop();
         }
 
-        function notify(i, text) {
-            const el = document.querySelectorAll('.tile')[i];
-            const n = document.createElement('div');
-            n.className = 'floating-notif';
-            n.innerText = text;
-            el.appendChild(n);
-            setTimeout(() => n.remove(), 800);
+        function updateUI() {
+            document.getElementById('m-gold').innerText = state.money;
+            document.getElementById('m-lvl').innerText = state.lvl;
+            document.getElementById('m-nrg').innerText = state.nrg;
         }
 
-        function closePopup() { document.getElementById('status-popup').style.display = 'none'; }
-        function saveGame() { localStorage.setItem('minefarm_save', JSON.stringify(game)); }
+        function spawnFloat(i, txt) {
+            const tiles = document.querySelectorAll('.tile');
+            const f = document.createElement('div');
+            f.className = 'pop-info'; f.innerText = txt;
+            tiles[i].appendChild(f);
+            setTimeout(() => f.remove(), 1000);
+        }
+
+        function saveGame() { localStorage.setItem('minefarm_pro_save', JSON.stringify(state)); }
         function loadGame() {
-            let saved = localStorage.getItem('minefarm_save');
-            if (saved) game = JSON.parse(saved);
+            let s = localStorage.getItem('minefarm_pro_save');
+            if (s) state = JSON.parse(s);
         }
 
         init();
