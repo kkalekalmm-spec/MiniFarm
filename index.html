@@ -3,334 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MineFarm Pro: Ultimate Edition</title>
+    <title>MineFarm: Dream Life</title>
     <style>
         :root {
-            --mc-dirt: #866043; --mc-grass: #507d32; --mc-farm: #4a3222;
-            --mc-sky: #72a7ff; --mc-ui: #c6c6c6; --mc-border: #373737;
+            --bg-sky: #87CEEB; --grass: #7cfc00; --dirt: #8B4513;
+            --panel: #fdf5e6; --accent: #ff69b4; --border: #5d4037;
         }
 
         body {
-            margin: 0; padding: 0; background: var(--mc-sky);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; touch-action: manipulation; user-select: none;
+            margin: 0; padding: 0; background: var(--bg-sky);
+            font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
+            user-select: none; touch-action: manipulation;
         }
 
-        /* Header & Stats */
-        #header {
-            background: rgba(0,0,0,0.7); color: white; padding: 10px;
-            display: flex; justify-content: space-around; font-weight: bold;
+        /* Stats Bar */
+        #top-bar {
+            background: rgba(255,255,255,0.9); height: 50px;
+            display: flex; justify-content: space-around; align-items: center;
+            border-bottom: 3px solid var(--border); font-weight: bold; color: #333;
         }
 
-        /* Main Screen Management */
-        .screen { display: none; height: calc(100vh - 120px); overflow-y: auto; padding: 15px; }
-        .active-screen { display: block; }
+        /* Main Viewport */
+        .view { display: none; height: calc(100vh - 120px); overflow-y: auto; padding: 15px; position: relative; }
+        .active-view { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Farm Grid */
         #farm-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-            max-width: 400px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            max-width: 400px; margin: 10px auto;
         }
         .tile {
-            aspect-ratio: 1/1; background: var(--mc-grass); border-radius: 4px;
-            position: relative; display: flex; justify-content: center; align-items: center;
-            border-bottom: 4px solid rgba(0,0,0,0.2);
+            aspect-ratio: 1/1; background: #55a630; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; border-bottom: 5px solid #2d5a27;
         }
-        .tile.tilled { background: var(--mc-farm); }
-        .tile.watered { border: 2px solid #2ecc71; box-shadow: inset 0 0 10px #3498db; }
-        .tile.has-pest::after { content: '🐛'; position: absolute; top: 0; right: 0; font-size: 14px; }
+        .tile.tilled { background: var(--dirt); }
+        .tile.watered { background: #5d3a1a; box-shadow: inset 0 0 15px #3498db; }
+        .tile.pest::after { content: '🐛'; position: absolute; top: 2px; right: 2px; font-size: 12px; }
 
-        /* Crop Visuals */
-        .crop { font-size: 30px; transition: transform 0.3s; }
-        .growth-0 { transform: scale(0.3); opacity: 0.6; }
-        .growth-1 { transform: scale(0.6); }
-        .growth-2 { transform: scale(1); }
-
-        /* UI Elements */
-        .card { background: white; border: 3px solid var(--mc-border); padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-        .btn { 
-            background: #7e7e7e; color: white; border: 2px solid #000; padding: 8px; 
-            text-align: center; cursor: pointer; margin: 2px;
+        /* House Visuals (Cafe Style) */
+        #house-display {
+            width: 100%; height: 220px; background: #fff; border: 4px solid var(--border);
+            border-radius: 20px; position: relative; overflow: hidden;
+            background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
         }
-        .btn:active { background: #444; }
+        .house-art { font-size: 100px; text-align: center; margin-top: 40px; }
+        .garden-deco { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-around; font-size: 30px; }
 
-        /* Navigation Bottom */
-        #navbar {
-            position: fixed; bottom: 0; width: 100%; height: 65px;
-            background: var(--mc-ui); border-top: 4px solid var(--mc-border);
+        /* Crop Popup */
+        #status-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--panel); border: 4px solid var(--border); border-radius: 15px;
+            padding: 20px; width: 250px; z-index: 100; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Buttons & UI */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            background: #fff; border-top: 4px solid var(--border);
             display: flex; justify-content: space-around; align-items: center;
         }
-        .nav-item { font-size: 24px; padding: 10px; }
+        .nav-btn { font-size: 28px; transition: transform 0.2s; }
+        .nav-btn:active { transform: scale(1.2); }
 
-        /* Floating Text */
-        .floating {
-            position: absolute; color: white; font-weight: bold;
-            text-shadow: 1px 1px 2px black; animation: rise 1s forwards;
+        .btn {
+            background: var(--accent); color: white; border: none; padding: 10px 15px;
+            border-radius: 10px; font-weight: bold; margin: 5px; box-shadow: 0 4px #c2185b;
         }
-        @keyframes rise { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px #c2185b; }
 
-        /* Inventory & Shop Lists */
-        .item-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 8px 0; }
+        .floating-notif {
+            position: absolute; pointer-events: none; animation: floatUp 0.8s forwards;
+            font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
+        }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="header">
+    <div id="top-bar">
         <span>💰 <span id="money">100</span></span>
-        <span>🌟 LV. <span id="level">1</span></span>
+        <span>⭐ <span id="exp">0</span></span>
     </div>
 
-    <div id="screen-farm" class="screen active-screen">
+    <div id="view-farm" class="view active-view">
         <div id="farm-grid"></div>
-        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center;">
-            <button class="btn" onclick="setTool('hoe')">⛏️ Cuốc</button>
-            <button class="btn" onclick="setTool('water')">💧 Tưới</button>
-            <button class="btn" onclick="setTool('spray')">💨 Thuốc sâu</button>
-            <button class="btn" onclick="setTool('fert')">🧪 Phân bón</button>
+        <div style="text-align: center; margin-top: 10px;">
+            <button class="btn" onclick="useTool('hoe')">⛏️ Cuốc</button>
+            <button class="btn" onclick="useTool('water')">💧 Tưới</button>
+            <button class="btn" onclick="useTool('spray')">💨 Thuốc</button>
+            <button class="btn" onclick="useTool('fert')">🧪 Phân</button>
         </div>
-        <p style="text-align: center; font-size: 0.8rem;">Đang dùng: <b id="current-tool">Chưa chọn</b></p>
+        <p style="text-align: center; font-size: 12px;">Đang dùng: <b id="tool-text">Cuốc</b></p>
     </div>
 
-    <div id="screen-inv" class="screen">
-        <h3>🎒 Túi đồ của bà</h3>
-        <div id="inventory-list"></div>
-    </div>
-
-    <div id="screen-shop" class="screen">
-        <h3>🏪 Chợ Pixel</h3>
-        <div class="card">
-            <h4>Mua Hạt Giống</h4>
-            <div id="shop-seeds"></div>
+    <div id="view-home" class="view">
+        <div id="house-display">
+            <div id="house-icon" class="house-art">⛺</div>
+            <div class="garden-deco">🌸🌳⛲</div>
         </div>
-        <div class="card">
-            <h4>Bán Nông Sản</h4>
-            <div id="shop-sell"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <h3 id="house-name">Túp lều lý tưởng</h3>
+            <p>Bảo Hân's Sweet Home</p>
+            <button class="btn" id="upgrade-btn" onclick="upgradeHouse()">Nâng cấp lên Quán Cafe (500💰)</button>
         </div>
     </div>
 
-    <div id="screen-home" class="screen">
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 50px;">🏠</div>
-            <h3>Nhà của Bảo Hân</h3>
-            <p>Cấp độ nhà: <span id="house-lv">1</span></p>
-            <button class="btn" onclick="upgradeHouse()">Nâng cấp nhà (500💰)</button>
-        </div>
-        <div class="card">
-            <h4>Trang trí & Tiện ích</h4>
-            <p>🛏️ Giường ngủ: Hồi phục năng lượng (Sắp ra mắt)</p>
-            <p>📦 Thùng chứa: Tăng sức chứa kho</p>
+    <div id="view-shop" class="view">
+        <div style="background: white; padding: 15px; border-radius: 15px; border: 3px solid var(--border);">
+            <h3>🏪 Chợ Sầm Uất</h3>
+            <div id="shop-items"></div>
+            <hr>
+            <h3>🧺 Bán Nông Sản</h3>
+            <div id="sell-items"></div>
         </div>
     </div>
 
-    <div id="navbar">
-        <div class="nav-item" onclick="showScreen('farm')">🌾</div>
-        <div class="nav-item" onclick="showScreen('inv')">🎒</div>
-        <div class="nav-item" onclick="showScreen('shop')">🏪</div>
-        <div class="nav-item" onclick="showScreen('home')">🏠</div>
+    <div id="view-bag" class="view">
+        <div style="background: white; padding: 15px; border-radius: 15px; border: 3px solid var(--border);">
+            <h3>🎒 Túi Đồ</h3>
+            <div id="bag-list"></div>
+        </div>
+    </div>
+
+    <div id="status-popup">
+        <h3 id="pop-name">Cây trồng</h3>
+        <p>Tiến độ: <span id="pop-growth">0</span>%</p>
+        <p id="pop-water">💧 Đang khát</p>
+        <p id="pop-pest">✅ Bình thường</p>
+        <button class="btn" onclick="closePopup()">Đóng</button>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-btn" onclick="showView('farm')">👩‍🌾</div>
+        <div class="nav-btn" onclick="showView('home')">🏠</div>
+        <div class="nav-btn" onclick="showView('shop')">🏪</div>
+        <div class="nav-btn" onclick="showView('bag')">🎒</div>
     </div>
 
     <script>
-        // DỮ LIỆU GAME
-        const cropsData = {
-            wheat: { name: 'Lúa mì', icon: '🌾', price: 10, sell: 25, time: 5000 },
-            carrot: { name: 'Cà rốt', icon: '🥕', price: 25, sell: 60, time: 8000 },
-            pumpkin: { name: 'Bí ngô', icon: '🎃', price: 50, sell: 150, time: 15000 }
+        const CROPS = {
+            wheat: { name: 'Lúa mì', seed: '🌱', icon: '🌾', cost: 10, sell: 25, time: 5 },
+            strawberry: { name: 'Dâu tây', seed: '🧤', icon: '🍓', cost: 30, sell: 80, time: 10 },
+            grape: { name: 'Nho tím', seed: '🍇', icon: '🍇', cost: 50, sell: 150, time: 20 },
+            sunflower: { name: 'Hướng dương', seed: '🌻', icon: '🌻', cost: 100, sell: 300, time: 30 }
         };
 
-        let state = {
-            money: 100,
-            level: 1,
-            houseLv: 1,
-            inventory: { wheat_seed: 3, carrot_seed: 0, pumpkin_seed: 0, wheat: 0, carrot: 0, pumpkin: 0 },
-            currentTool: 'hoe',
-            tiles: Array(16).fill().map(() => ({ 
-                type: 'grass', crop: null, growth: 0, watered: false, pest: false, fertilized: false 
-            }))
+        const HOUSE_LVS = [
+            { name: "Túp lều lý tưởng", icon: "⛺", cost: 500 },
+            { name: "Nhà gỗ nhỏ", icon: "🏠", cost: 1500 },
+            { name: "Tiệm Cafe Sân Vườn", icon: "🏡", cost: 5000 },
+            { name: "Biệt thự Dreamy", icon: "🏰", cost: 0 }
+        ];
+
+        let game = {
+            money: 100, exp: 0, houseLv: 0,
+            inv: { wheat_s: 2, strawberry_s: 0, grape_s: 0, sunflower_s: 0 },
+            harvest: { wheat: 0, strawberry: 0, grape: 0, sunflower: 0 },
+            tiles: Array(16).fill().map(() => ({ type: 'grass', crop: null, g: 0, w: false, p: false, f: false })),
+            tool: 'hoe'
         };
 
-        // KHỞI TẠO
+        // Khởi tạo
         function init() {
+            loadGame();
             renderFarm();
             updateUI();
-            // Loop kiểm tra sâu bệnh & khô nước
-            setInterval(gameTick, 4000);
+            setInterval(gameTick, 3000);
+        }
+
+        function gameTick() {
+            game.tiles.forEach((t, i) => {
+                if (t.crop) {
+                    if (Math.random() < 0.1) t.p = true;
+                    if (t.w && !t.p) {
+                        t.g = Math.min(100, t.g + (t.f ? 20 : 10));
+                    }
+                    if (Math.random() < 0.2) t.w = false;
+                }
+            });
+            renderFarm();
+            saveGame();
         }
 
         function renderFarm() {
             const grid = document.getElementById('farm-grid');
             grid.innerHTML = '';
-            state.tiles.forEach((tile, i) => {
+            game.tiles.forEach((t, i) => {
                 const el = document.createElement('div');
-                el.className = `tile ${tile.type === 'tilled' ? 'tilled' : ''} ${tile.watered ? 'watered' : ''} ${tile.pest ? 'has-pest' : ''}`;
-                el.onclick = () => handleTileClick(i);
+                el.className = `tile ${t.type === 'tilled' ? 'tilled' : ''} ${t.w ? 'watered' : ''} ${t.p ? 'pest' : ''}`;
+                el.onclick = () => handleTile(i);
                 
-                if (tile.crop) {
-                    const cropEl = document.createElement('div');
-                    cropEl.className = `crop growth-${tile.growth}`;
-                    cropEl.innerText = cropsData[tile.crop].icon;
-                    el.appendChild(cropEl);
+                if (t.crop) {
+                    const c = document.createElement('div');
+                    c.style.fontSize = t.g < 100 ? '20px' : '35px';
+                    c.style.opacity = t.g < 40 ? '0.5' : '1';
+                    c.innerText = t.g < 50 ? CROPS[t.crop].seed : CROPS[t.crop].icon;
+                    el.appendChild(c);
                 }
                 grid.appendChild(el);
             });
         }
 
-        function handleTileClick(i) {
-            let t = state.tiles[i];
+        function handleTile(i) {
+            let t = game.tiles[i];
             
-            if (state.currentTool === 'hoe' && t.type === 'grass') {
-                t.type = 'tilled';
-            } 
-            else if (state.currentTool === 'water' && t.type === 'tilled') {
-                t.watered = true;
+            // Nếu có cây, ưu tiên hiện bảng thông tin trừ khi đang thu hoạch
+            if (t.crop && game.tool !== 'harvest') {
+                showPopup(i);
+                return;
             }
-            else if (state.currentTool === 'spray' && t.pest) {
-                t.pest = false;
-                showFloating(i, "Sạch sâu!");
-            }
-            else if (state.currentTool === 'fert' && t.crop && !t.fertilized) {
-                t.fertilized = true;
-                showFloating(i, "Lớn nhanh!");
-            }
-            else if (state.currentTool.includes('_seed')) {
-                let seedType = state.currentTool.split('_')[0];
-                if (t.type === 'tilled' && !t.crop && state.inventory[state.currentTool] > 0) {
-                    t.crop = seedType;
-                    t.growth = 0;
-                    state.inventory[state.currentTool]--;
-                    startGrowth(i);
+
+            if (game.tool === 'hoe' && t.type === 'grass') t.type = 'tilled';
+            else if (game.tool === 'water') t.w = true;
+            else if (game.tool === 'spray') t.p = false;
+            else if (game.tool === 'fert') t.f = true;
+            else if (game.tool.endsWith('_s')) {
+                let cType = game.tool.split('_')[0];
+                if (t.type === 'tilled' && !t.crop && game.inv[game.tool] > 0) {
+                    t.crop = cType; t.g = 0; t.w = true;
+                    game.inv[game.tool]--;
                 }
             }
-            else if (t.crop && t.growth === 2) {
-                // Thu hoạch
-                state.inventory[t.crop]++;
-                showFloating(i, `+1 ${cropsData[t.crop].name}`);
-                t.crop = null; t.growth = 0; t.watered = false; t.fertilized = false;
+            else if (t.crop && t.g >= 100) {
+                game.harvest[t.crop]++;
+                notify(i, `+1 ${CROPS[t.crop].name}`);
+                t.crop = null; t.g = 0;
             }
-
-            renderFarm();
-            updateUI();
+            renderFarm(); updateUI();
         }
 
-        function startGrowth(i) {
-            let t = state.tiles[i];
-            const grow = () => {
-                if (!t.crop) return;
-                if (t.pest) { setTimeout(grow, 2000); return; } // Bị sâu thì ngừng lớn
-                
-                if (t.growth < 2) {
-                    t.growth++;
-                    renderFarm();
-                    let nextTime = cropsData[t.crop].time;
-                    if (t.fertilized) nextTime /= 2;
-                    setTimeout(grow, nextTime);
-                }
-            };
-            setTimeout(grow, cropsData[t.crop].time);
-        }
-
-        function gameTick() {
-            state.tiles.forEach(t => {
-                if (t.crop) {
-                    if (Math.random() < 0.1) t.pest = true; // 10% bị sâu
-                    if (Math.random() < 0.2) t.watered = false; // 20% bị khô đất
-                }
-            });
-            renderFarm();
-        }
-
-        // HỆ THỐNG UI & MÀN HÌNH
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-            document.getElementById(`screen-${id}`).classList.add('active-screen');
-            if(id === 'inv') renderInventory();
-            if(id === 'shop') renderShop();
-        }
-
-        function setTool(tool) {
-            state.currentTool = tool;
-            document.getElementById('current-tool').innerText = tool;
-        }
-
-        function updateUI() {
-            document.getElementById('money').innerText = state.money;
-            document.getElementById('level').innerText = state.level;
-            document.getElementById('house-lv').innerText = state.houseLv;
-        }
-
-        function renderInventory() {
-            const list = document.getElementById('inventory-list');
-            list.innerHTML = '';
-            for (let item in state.inventory) {
-                if (state.inventory[item] > 0) {
-                    const row = document.createElement('div');
-                    row.className = 'item-row card';
-                    row.innerHTML = `<span>${item.replace('_', ' ')} x${state.inventory[item]}</span>`;
-                    if (item.includes('_seed')) {
-                        const btn = document.createElement('button');
-                        btn.className = 'btn';
-                        btn.innerText = 'Sử dụng';
-                        btn.onclick = () => { setTool(item); showScreen('farm'); };
-                        row.appendChild(btn);
-                    }
-                    list.appendChild(row);
-                }
-            }
-        }
-
-        function renderShop() {
-            const sDiv = document.getElementById('shop-seeds');
-            sDiv.innerHTML = '';
-            for (let id in cropsData) {
-                sDiv.innerHTML += `
-                    <div class="item-row">
-                        <span>${cropsData[id].icon} Hạt ${cropsData[id].name} (${cropsData[id].price}💰)</span>
-                        <button class="btn" onclick="buyItem('${id}_seed', ${cropsData[id].price})">Mua</button>
-                    </div>`;
-            }
-
-            const sellDiv = document.getElementById('shop-sell');
-            sellDiv.innerHTML = '';
-            for (let id in cropsData) {
-                if (state.inventory[id] > 0) {
-                    sellDiv.innerHTML += `
-                        <div class="item-row">
-                            <span>${cropsData[id].icon} ${cropsData[id].name} (Giá: ${cropsData[id].sell}💰)</span>
-                            <button class="btn" onclick="sellItem('${id}', ${cropsData[id].sell})">Bán hết</button>
-                        </div>`;
-                }
-            }
-        }
-
-        function buyItem(id, price) {
-            if (state.money >= price) {
-                state.money -= price;
-                state.inventory[id]++;
-                updateUI(); renderShop();
-            } else { alert("Hết tiền rồi bà ơi!"); }
-        }
-
-        function sellItem(id, price) {
-            state.money += state.inventory[id] * price;
-            state.inventory[id] = 0;
-            updateUI(); renderShop();
+        function showPopup(i) {
+            let t = game.tiles[i];
+            document.getElementById('pop-name').innerText = CROPS[t.crop].name;
+            document.getElementById('pop-growth').innerText = t.g;
+            document.getElementById('pop-water').innerText = t.w ? "💧 Đã tưới nước" : "🌵 Cần tưới nước!";
+            document.getElementById('pop-pest').innerText = t.p ? "🐛 Có sâu bệnh!" : "✅ Cây khỏe mạnh";
+            document.getElementById('status-popup').style.display = 'block';
         }
 
         function upgradeHouse() {
-            if (state.money >= 500) {
-                state.money -= 500;
-                state.houseLv++;
+            let next = HOUSE_LVS[game.houseLv];
+            if (game.money >= next.cost) {
+                game.money -= next.cost;
+                game.houseLv++;
                 updateUI();
-                alert("Nhà bà xịn hơn rồi đó!");
+                alert("Chúc mừng Bảo Hân đã nâng cấp nhà thành công! 🎉");
             }
         }
 
-        function showFloating(i, text) {
-            const tiles = document.querySelectorAll('.tile');
-            const float = document.createElement('div');
-            float.className = 'floating';
-            float.innerText = text;
-            tiles[i].appendChild(float);
-            setTimeout(() => float.remove(), 1000);
+        function updateUI() {
+            document.getElementById('money').innerText = game.money;
+            document.getElementById('exp').innerText = game.exp;
+            let h = HOUSE_LVS[game.houseLv];
+            document.getElementById('house-icon').innerText = h.icon;
+            document.getElementById('house-name').innerText = h.name;
+            document.getElementById('upgrade-btn').innerText = `Nâng cấp (${HOUSE_LVS[game.houseLv].cost}💰)`;
+            if (game.houseLv >= 3) document.getElementById('upgrade-btn').style.display = 'none';
+            renderShop(); renderBag();
+        }
+
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(`view-${id}`).classList.add('active-view');
+        }
+
+        function useTool(t) { game.tool = t; document.getElementById('tool-text').innerText = t; }
+
+        function renderShop() {
+            let html = '';
+            for (let id in CROPS) {
+                html += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>${CROPS[id].icon} Hạt ${CROPS[id].name} (${CROPS[id].cost}💰)</span>
+                    <button class="btn" onclick="buy('${id}_s', ${CROPS[id].cost})">Mua</button>
+                </div>`;
+            }
+            document.getElementById('shop-items').innerHTML = html;
+
+            let sellHtml = '';
+            for (let id in CROPS) {
+                if (game.harvest[id] > 0) {
+                    sellHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>${CROPS[id].icon} ${game.harvest[id]} quả</span>
+                        <button class="btn" onclick="sell('${id}', ${CROPS[id].sell})">Bán (+${game.harvest[id]*CROPS[id].sell}💰)</button>
+                    </div>`;
+                }
+            }
+            document.getElementById('sell-items').innerHTML = sellHtml || 'Trống...';
+        }
+
+        function renderBag() {
+            let html = '';
+            for (let id in game.inv) {
+                if (game.inv[id] > 0) {
+                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>${id} x${game.inv[id]}</span>
+                        <button class="btn" onclick="useTool('${id}'); showView('farm')">Gieo</button>
+                    </div>`;
+                }
+            }
+            document.getElementById('bag-list').innerHTML = html || 'Túi trống rỗng...';
+        }
+
+        function buy(id, price) {
+            if (game.money >= price) { game.money -= price; game.inv[id]++; updateUI(); }
+        }
+
+        function sell(id, price) {
+            game.money += game.harvest[id] * price;
+            game.harvest[id] = 0; updateUI();
+        }
+
+        function notify(i, text) {
+            const el = document.querySelectorAll('.tile')[i];
+            const n = document.createElement('div');
+            n.className = 'floating-notif';
+            n.innerText = text;
+            el.appendChild(n);
+            setTimeout(() => n.remove(), 800);
+        }
+
+        function closePopup() { document.getElementById('status-popup').style.display = 'none'; }
+        function saveGame() { localStorage.setItem('minefarm_save', JSON.stringify(game)); }
+        function loadGame() {
+            let saved = localStorage.getItem('minefarm_save');
+            if (saved) game = JSON.parse(saved);
         }
 
         init();
