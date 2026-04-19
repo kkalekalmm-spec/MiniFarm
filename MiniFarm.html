@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MineFarm: Mini Pixel</title>
+    <style>
+        :root {
+            --mc-dirt: #866043;
+            --mc-grass: #507d32;
+            --mc-farm: #4a3222;
+            --mc-wheat: #e3d064;
+            --mc-sky: #72a7ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--mc-sky);
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: manipulation;
+        }
+
+        #stats {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        #game-container {
+            position: relative;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(7, 60px);
+            gap: 4px;
+            background: #333;
+            padding: 8px;
+            border: 4px solid #1e1e1e;
+        }
+
+        .tile {
+            width: 60px;
+            height: 60px;
+            background-color: var(--mc-grass);
+            image-rendering: pixelated;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-bottom: 4px solid rgba(0,0,0,0.2);
+        }
+
+        .tile.tilled { background-color: var(--mc-farm); }
+        
+        .crop {
+            width: 80%;
+            height: 80%;
+            pointer-events: none;
+        }
+
+        .growth-0 { background-color: #4d3300; width: 20%; height: 20%; border-radius: 50%; }
+        .growth-1 { background-color: #2d5a27; width: 40%; height: 40%; }
+        .growth-2 { background-color: #507d32; width: 60%; height: 70%; }
+        .growth-3 { background-color: var(--mc-wheat); width: 80%; height: 90%; border-top: 5px solid #f2e69b; }
+
+        #inventory {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .slot {
+            width: 60px;
+            height: 60px;
+            background: #8b8b8b;
+            border: 4px solid #373737;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            color: white;
+            position: relative;
+        }
+
+        .slot.active {
+            border-color: #ffffff;
+            background: #aaaaaa;
+        }
+
+        .slot-icon { font-size: 24px; }
+        
+        .floating-text {
+            position: absolute;
+            color: gold;
+            font-weight: bold;
+            animation: floatUp 1s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="stats">
+        <span>💎 <span id="gold">0</span></span>
+        <span>🌾 <span id="seeds">5</span></span>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div id="inventory">
+        <div class="slot active" onclick="selectTool('hoe', 0)">
+            <span class="slot-icon">⛏️</span>
+        </div>
+        <div class="slot" onclick="selectTool('seed', 1)">
+            <span class="slot-icon">🌱</span>
+        </div>
+        <div class="slot" onclick="selectTool('harvest', 2)">
+            <span class="slot-icon">🧺</span>
+        </div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 35; // 5x7
+        const container = document.getElementById('game-container');
+        const goldDisplay = document.getElementById('gold');
+        const seedsDisplay = document.getElementById('seeds');
+        
+        let gold = 0;
+        let seeds = 5;
+        let selectedTool = 'hoe';
+        let tiles = [];
+
+        // Khởi tạo lưới
+        function initGame() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const tileEl = document.createElement('div');
+                tileEl.className = 'tile';
+                tileEl.onclick = () => handleTileClick(i);
+                
+                const tileData = {
+                    element: tileEl,
+                    type: 'grass', // grass, tilled
+                    planted: false,
+                    growth: 0,
+                    timer: null
+                };
+                
+                container.appendChild(tileEl);
+                tiles.push(tileData);
+            }
+        }
+
+        function selectTool(tool, index) {
+            selectedTool = tool;
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.slot')[index].classList.add('active');
+        }
+
+        function handleTileClick(index) {
+            const tile = tiles[index];
+
+            // 1. Cuốc đất
+            if (selectedTool === 'hoe' && tile.type === 'grass') {
+                tile.type = 'tilled';
+                tile.element.classList.add('tilled');
+                spawnText(tile.element, "CUỐC");
+            } 
+            // 2. Gieo hạt
+            else if (selectedTool === 'seed' && tile.type === 'tilled' && !tile.planted && seeds > 0) {
+                seeds--;
+                updateStats();
+                tile.planted = true;
+                tile.growth = 0;
+                renderCrop(tile);
+                startGrowth(tile);
+            } 
+            // 3. Thu hoạch
+            else if (selectedTool === 'harvest' && tile.planted && tile.growth === 3) {
+                tile.planted = false;
+                tile.growth = 0;
+                tile.element.innerHTML = '';
+                gold += 10;
+                seeds += Math.random() > 0.5 ? 2 : 1; // Nhận lại hạt giống ngẫu nhiên
+                updateStats();
+                spawnText(tile.element, "+10💎");
+            }
+        }
+
+        function renderCrop(tile) {
+            tile.element.innerHTML = '';
+            const crop = document.createElement('div');
+            crop.className = `crop growth-${tile.growth}`;
+            tile.element.appendChild(crop);
+        }
+
+        function startGrowth(tile) {
+            const grow = () => {
+                if (tile.growth < 3) {
+                    tile.growth++;
+                    renderCrop(tile);
+                    setTimeout(grow, 3000); // Cây lớn mỗi 3 giây
+                }
+            };
+            setTimeout(grow, 3000);
+        }
+
+        function updateStats() {
+            goldDisplay.innerText = gold;
+            seedsDisplay.innerText = seeds;
+        }
+
+        function spawnText(el, text) {
+            const span = document.createElement('span');
+            span.className = 'floating-text';
+            span.innerText = text;
+            el.appendChild(span);
+            setTimeout(() => span.remove(), 1000);
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
