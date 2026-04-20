@@ -1,186 +1,558 @@
-<!DOCTYPE html>  
-<html lang="vi">  
-<head>  
-<meta charset="UTF-8">  
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-<title>MineFarm: Pro Max Ultra Edition</title>  
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MineFarm: Pro Max Ultra Edition</title>
+    <style>
+        :root{
+            --primary:#4cd137;
+            --bg:#f5f6fa;
+            --dark:#2f3640;
+            --gold:#fbc531;
+            --danger:#e84118;
+            --blue:#00a8ff;
+            --cozy-1:#6f4e37;
+            --night-bg: #1a1a2e;
+        }
 
-<style>  
-:root{  
---primary:#4cd137;  
---bg:#f5f6fa;  
---dark:#2f3640;  
---gold:#fbc531;  
---danger:#e84118;  
---blue:#00a8ff;  
---cozy-1:#6f4e37;  
---night-bg: #1a1a2e;  
-}  
+        *{box-sizing:border-box}
 
-*{box-sizing:border-box}  
+        body{
+            margin:0;
+            padding:0;
+            background:linear-gradient(180deg,#79c7ff 0%,#dff3ff 32%,#f4efe6 100%);
+            font-family:'Segoe UI',sans-serif;
+            overflow:hidden;
+            user-select:none;
+            touch-action:manipulation;
+            color:#1f1f1f;
+            transition: background 1s;
+        }
 
-body{  
-margin:0;  
-padding:0;  
-background:linear-gradient(180deg,#79c7ff 0%,#dff3ff 32%,#f4efe6 100%);  
-font-family:'Segoe UI',sans-serif;  
-overflow:hidden;  
-user-select:none;  
-touch-action:manipulation;  
-}  
+        #stat-bar{
+            background:rgba(31,24,20,.9);
+            color:#fff;
+            height:66px;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            border-bottom:4px solid var(--gold);
+            font-size:13px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-#stat-bar{  
-background:rgba(31,24,20,.9);  
-color:#fff;  
-height:66px;  
-display:flex;  
-justify-content:space-around;  
-align-items:center;  
-border-bottom:4px solid var(--gold);  
-font-size:13px;  
-position: sticky;  
-top: 0;  
-z-index: 100;  
-}  
+        #stat-bar span{ display:inline-flex; align-items:center; gap:4px; }
 
-.view{ display:none; height:calc(100vh - 136px); overflow-y:auto; padding:14px;}  
-.active-view{ display:block;}  
+        .view{
+            display:none;
+            height:calc(100vh - 136px);
+            overflow-y:auto;
+            padding:14px;
+            background:rgba(255,255,255,.1);
+        }
 
-.card{  
-background:#fff;  
-border-radius:18px;  
-padding:14px;  
-margin-bottom:12px;  
-}  
+        .active-view{ display:block; animation:fadeIn .2s ease-out; }
+        @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
-.btn{  
-background:var(--primary);  
-color:#fff;  
-border:none;  
-padding:10px 14px;  
-border-radius:12px;  
-font-weight:700;  
-}  
+        .card{
+            background:rgba(255,255,255,.95);
+            border-radius:18px;
+            padding:14px;
+            margin-bottom:12px;
+            border:2px solid rgba(47,54,64,.1);
+            box-shadow:0 4px 12px rgba(0,0,0,.05);
+        }
 
-/* PASSAGE EFFECT */  
-.passage{  
-animation: passageFade .4s ease;  
-}  
-@keyframes passageFade{  
-from{opacity:0;transform:translateX(40px)}  
-to{opacity:1;transform:translateX(0)}  
-}  
+        .btn{
+            background:var(--primary);
+            color:#fff;
+            border:none;
+            padding:10px 14px;
+            border-radius:12px;
+            font-weight:700;
+            box-shadow:0 4px #3b8f28;
+            transition:transform .05s;
+        }
+        .btn:active{transform:translateY(2px);box-shadow:none}
+        .btn.secondary{background:#f0f0f0;color:#222;box-shadow:0 4px #c8c8c8}
+        .btn.warn{background:var(--gold);color:#352100;box-shadow:0 4px #d49f00}
+        .btn.danger{background:var(--danger);box-shadow:0 4px #b02f0d}
 
-.home-bg{  
-background:#fdf0d5;  
-border:10px solid #6f4e37;  
-height:200px;  
-border-radius:20px;  
-display:flex;  
-align-items:center;  
-justify-content:center;  
-font-size:50px;  
-margin-bottom:20px;  
-cursor:pointer;  
-}  
+        /* FARM GRID */
+        #farm-grid{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:8px;
+            max-width:360px;
+            margin:auto;
+        }
+        .tile{
+            aspect-ratio:1/1;
+            background:#57c84d;
+            border-radius:8px;
+            border-bottom:4px solid #2d5a27;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:20px;
+            position: relative;
+        }
+        .tile.tilled{ background:#9f6a3a; border-bottom-color: #5d3d22; }
+        .tile.watered{ box-shadow:inset 0 0 10px #1db0ff; }
+        .progress-mini { position: absolute; bottom: 2px; left: 2px; right: 2px; height: 3px; background: #ddd; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
 
-nav{  
-position:fixed;  
-bottom:0;  
-width:100%;  
-height:70px;  
-background:#fff;  
-display:flex;  
-justify-content:space-around;  
-align-items:center;  
-border-top:3px solid var(--dark);  
-}  
-</style>  
-</head>  
+        /* FISHING IMPROVED */
+        #fish-area{
+            height:220px;
+            background:linear-gradient(180deg,#12a4ff 0%,#0078cb 100%);
+            border-radius:20px;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        }
+        #fish-game-ui{ width: 100%; height: 100%; display: none; position: relative; }
+        #fish-bar-bg { width: 30px; height: 180px; background: rgba(0,0,0,0.5); border-radius: 15px; position: absolute; left: 20px; top: 20px; border: 2px solid #fff; }
+        #fish-target-zone { width: 100%; height: 40px; background: var(--primary); position: absolute; bottom: 0; border-radius: 10px; opacity: 0.8; transition: bottom 0.1s; }
+        #fish-icon-indicator { position: absolute; left: 5px; font-size: 20px; bottom: 0; transition: bottom 0.1s; }
+        #catch-meter-container { width: 10px; height: 180px; background: #333; position: absolute; left: 60px; top: 20px; border-radius: 5px; }
+        #catch-meter-fill { width: 100%; height: 0%; background: var(--gold); position: absolute; bottom: 0; border-radius: 5px; transition: height 0.1s; }
 
-<body>  
+        /* HOME */
+        .home-bg { background: #fdf0d5; border: 10px solid #6f4e37; height: 200px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 50px; margin-bottom: 20px; }
 
-<div id="stat-bar">  
-<span>📅 Ngày <span id="m-day">1</span></span>  
-<span>💰 <span id="m-gold">150</span></span>  
-<span>⚡ <span id="m-nrg">30</span>/30</span>  
-</div>  
+        .status-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 10px; }
+        .status-table th { text-align: left; opacity: 0.6; }
+        .status-table td { padding: 4px 0; border-bottom: 1px solid #eee; }
 
-<!-- FARM -->  
-<div id="v-farm" class="view active-view passage">  
-<div class="card">  
-<h3>🌱 Khu vườn</h3>  
-<button class="btn" onclick="enterHome()">🚪 Vào nhà</button>  
-</div>  
-</div>  
+        .quest-card { border-left: 4px solid var(--blue); padding-left: 10px; margin-bottom: 8px; }
+        .quest-done { opacity: 0.5; text-decoration: line-through; border-left-color: #ccc; }
 
-<!-- HOME -->  
-<div id="v-home" class="view passage">  
-<div class="home-bg">🏠</div>  
+        .shop-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; }
+        .tab{ background:#eee; padding:7px 14px; border-radius:12px; font-size:12px; white-space:nowrap; }
+        .tab.active{ background:var(--gold); font-weight:700; }
 
-<div class="card">  
-<h3>Nhà của bạn</h3>  
-<p>Nơi nghỉ ngơi.</p>  
+        #toast{ position:fixed; left:50%; bottom:100px; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; opacity:0; z-index:2000; }
 
-<button class="btn" onclick="exitHome()">🚪 Rời nhà</button>  
+        nav{ position:fixed; bottom:0; width:100%; height:70px; background:#fff; display:flex; justify-content:space-around; align-items:center; border-top:3px solid var(--dark); }
+        .nav-item{ font-size:22px; text-align:center; }
+        .nav-item span{ display:block; font-size:10px; font-weight:800; }
+    </style>
+</head>
+<body>
 
-<button class="btn" onclick="handleSleep()">😴 Ngủ</button>  
-</div>  
-</div>  
+    <div id="stat-bar">
+        <span>📅 Ngày <span id="m-day">1</span></span>
+        <span>💰 <span id="m-gold">150</span></span>
+        <span>⚡ <span id="m-nrg">30</span>/30</span>
+        <span>⭐ Lv. <span id="m-lvl">1</span></span>
+    </div>
 
-<nav>  
-<div onclick="showV('farm')">🌱</div>  
-<div onclick="showV('home')">🏠</div>  
-</nav>  
+    <div id="v-farm" class="view active-view">
+        <div class="card">
+            <div id="farm-grid"></div>
+        </div>
+        <div class="card">
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;">
+                <button class="btn" onclick="selectT('hoe')">⛏️ Cuốc (1⚡)</button>
+                <button class="btn" onclick="selectT('water')">💧 Tưới (1⚡)</button>
+                <button class="btn" onclick="selectT('harvest')">🧺 Thu hoạch (1⚡)</button>
+            </div>
+            <p style="text-align:center;font-size:12px;margin:8px 0 0 0;">Đang dùng: <b id="cur-tool-name">Cuốc</b></p>
+        </div>
+        <div class="card">
+            <h4>📊 Nông trại ngày <span class="d-val">1</span></h4>
+            <table class="status-table">
+                <thead><tr><th>Ô</th><th>Cây</th><th>Ngày tới</th><th>Nước</th></tr></thead>
+                <tbody id="status-body"></tbody>
+            </table>
+        </div>
+    </div>
 
-<script>  
+    <div id="v-home" class="view">
+        <div class="home-bg">🛏️</div>
+        <div class="card" style="text-align:center;">
+            <h3>Nhà của bạn</h3>
+            <p>Nơi nghỉ ngơi sau một ngày làm việc vất vả.</p>
+            <button class="btn warn" style="width:100%; padding: 20px;" onclick="handleSleep()">😴 ĐI NGỦ (Hồi thể lực & Qua ngày mới)</button>
+        </div>
+        <div id="home-decor-list"></div>
+    </div>
 
-let state = {  
-day:1, gold:150, nrg:30  
-};  
+    <div id="v-fish" class="view">
+        <div id="fish-area" onmousedown="fishAction(true)" onmouseup="fishAction(false)" ontouchstart="fishAction(true)" ontouchend="fishAction(false)">
+            <div id="fish-idle-ui">
+                <div id="fish-alert" style="font-size:50px;display:none;text-align:center;">❗</div>
+                <div id="bobber" style="font-size:40px;text-align:center;">🎣</div>
+                <p id="fish-hint" style="color:white;font-weight:800;">Chạm để thả mồi (2⚡)</p>
+            </div>
+            
+            <div id="fish-game-ui">
+                <div id="fish-bar-bg">
+                    <div id="fish-target-zone"></div>
+                    <div id="fish-icon-indicator">🐟</div>
+                </div>
+                <div id="catch-meter-container">
+                    <div id="catch-meter-fill"></div>
+                </div>
+                <p style="position:absolute; right:20px; color:white; font-size:12px; width:120px;">Giữ để đẩy thanh xanh lên, thả để rơi xuống. Giữ cá trong vùng xanh!</p>
+            </div>
+        </div>
+    </div>
 
-function updateStats(){  
-document.getElementById('m-day').innerText=state.day;  
-document.getElementById('m-gold').innerText=state.gold;  
-document.getElementById('m-nrg').innerText=state.nrg;  
-}  
+    <div id="v-quest" class="view">
+        <div class="card"><h3>📜 Nhiệm vụ chính</h3><div id="main-quests"></div></div>
+        <div class="card"><h3>📌 Nhiệm vụ phụ</h3><div id="sub-quests"></div></div>
+    </div>
 
-function showV(v){  
-document.querySelectorAll('.view').forEach(el=>{  
-el.classList.remove('active-view');  
-});  
+    <div id="v-shop" class="view">
+        <div class="shop-tabs">
+            <div class="tab active" onclick="switchShop('seed')">🌱 Hạt</div>
+            <div class="tab" onclick="switchShop('food')">🍔 Thức ăn</div>
+            <div class="tab" onclick="switchShop('decor')">🪑 Nội thất</div>
+            <div class="tab" onclick="switchShop('sell')">💰 Bán</div>
+        </div>
+        <div id="shop-content"></div>
+    </div>
 
-const target=document.getElementById('v-'+v);  
-target.classList.add('active-view');  
+    <div id="v-bag" class="view">
+        <div class="card"><h3>🎒 Túi đồ</h3><div id="bag-list"></div></div>
+        <div class="card"><h3>📦 Kho nông sản & Cá</h3><div id="storage-list"></div></div>
+    </div>
 
-// reset animation  
-target.classList.remove('passage');  
-void target.offsetWidth;  
-target.classList.add('passage');  
-}  
+    <div id="toast"></div>
 
-/* ===== NEW FEATURE: HOUSE PASSAGE ===== */  
+    <nav>
+        <div class="nav-item" onclick="showV('home')">🏠<span>Nhà</span></div>
+        <div class="nav-item" onclick="showV('farm')">🏡<span>Trại</span></div>
+        <div class="nav-item" onclick="showV('fish')">🐟<span>Câu</span></div>
+        <div class="nav-item" onclick="showV('shop')">🏪<span>Chợ</span></div>
+        <div class="nav-item" onclick="showV('bag')">🎒<span>Túi</span></div>
+    </nav>
 
-function enterHome(){  
-showV('home');  
-}  
+    <script>
+        // CROPS: Time ở đây tính bằng NGÀY (Stardew Style)
+        const CROPS = {
+            wheat: { name: 'Lúa mì', icon: '🌾', seed: '🌱', time: 2, cost: 10, sell: 35, xp: 5 },
+            corn: { name: 'Ngô', icon: '🌽', seed: '🌿', time: 4, cost: 25, sell: 80, xp: 12 },
+            carrot: { name: 'Cà rốt', icon: '🥕', seed: '🥕', time: 3, cost: 15, sell: 50, xp: 8 },
+            potato: { name: 'Khoai tây', icon: '🥔', seed: '🥔', time: 4, cost: 20, sell: 70, xp: 10 },
+            tomato: { name: 'Cà chua', icon: '🍅', seed: '🍅', time: 5, cost: 35, sell: 120, xp: 18 },
+            pumpkin: { name: 'Bí ngô', icon: '🎃', seed: '🎃', time: 10, cost: 80, sell: 350, xp: 40 },
+            strawberry: { name: 'Dâu tây', icon: '🍓', seed: '☘️', time: 7, cost: 50, sell: 200, xp: 30 },
+            blueberry: { name: 'Việt quất', icon: '🫐', seed: '🫐', time: 8, cost: 60, sell: 250, xp: 35 },
+            watermelon: { name: 'Dưa hấu', icon: '🍉', seed: '🍉', time: 12, cost: 100, sell: 500, xp: 60 },
+            pineapple: { name: 'Dứa', icon: '🍍', seed: '🍍', time: 14, cost: 120, sell: 650, xp: 75 },
+            sunflower: { name: 'Hướng dương', icon: '🌻', seed: '🌻', time: 6, cost: 40, sell: 180, xp: 25 },
+            rose: { name: 'Hoa hồng', icon: '🌹', seed: '🌹', time: 5, cost: 45, sell: 190, xp: 28 },
+            grapes: { name: 'Nho', icon: '🍇', seed: '🍇', time: 10, cost: 90, sell: 400, xp: 55 },
+            eggplant: { name: 'Cà tím', icon: '🍆', seed: '🍆', time: 5, cost: 30, sell: 110, xp: 15 },
+            chili: { name: 'Ớt', icon: '🌶️', seed: '🌶️', time: 3, cost: 20, sell: 65, xp: 10 }
+        };
 
-function exitHome(){  
-showV('farm');  
-}  
+        const FOOD = {
+            bread: { name: 'Bánh mì', nrg: 8, cost: 15 },
+            pizza: { name: 'Pizza', nrg: 25, cost: 60 },
+            steak: { name: 'Bít tết', nrg: 30, cost: 80 },
+            coffee: { name: 'Cà phê', nrg: 15, cost: 30 },
+            energy_drink: { name: 'Sting dâu', nrg: 30, cost: 100 }
+        };
 
-/* ===== SLEEP ===== */  
+        const FISH_DATA = {
+            shrimp: { name: 'Tôm', icon: '🦐', sell: 20 },
+            crab: { name: 'Cua', icon: '🦀', sell: 35 },
+            fish: { name: 'Cá chép', icon: '🐟', sell: 50 },
+            salmon: { name: 'Cá hồi', icon: '🍣', sell: 120 },
+            goldfish: { name: 'Cá vàng', icon: '🐠', sell: 300 },
+            shark: { name: 'Cá mập', icon: '🦈', sell: 1200 },
+            whale: { name: 'Cá voi', icon: '🐋', sell: 3000 }
+        };
 
-function handleSleep(){  
-state.day++;  
-state.nrg=30;  
-updateStats();  
-alert("Ngày mới!");  
-}  
+        let state = {
+            day: 1, gold: 150, nrg: 30, lvl: 1, xp: 0,
+            inv: { hoe: 1, rod: 1 },
+            bag: { wheat_seed: 3 },
+            storage: {},
+            tiles: Array(12).fill(null).map(() => ({ type: 'grass', crop: null, daysGrown: 0, watered: false })),
+            curTool: 'hoe',
+            // Fishing State
+            fishing: { step: 'idle', targetY: 0, playerY: 0, playerV: 0, fishY: 20, fishDir: 1, catchProgress: 0, isPressing: false }
+        };
 
-updateStats();  
+        function init() {
+            renderAll();
+            setInterval(gameLoop, 50);
+        }
 
-</script>  
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 2000);
+        }
 
-</body>  
+        function useNrg(amt) {
+            if (state.nrg >= amt) {
+                state.nrg -= amt;
+                updateStats();
+                return true;
+            }
+            showToast("⚠️ Bạn quá mệt để làm việc này!");
+            return false;
+        }
+
+        // CẢI TIẾN: Game Loop cho Minigame Câu cá
+        function gameLoop() {
+            if (state.fishing.step === 'minigame') {
+                const f = state.fishing;
+                
+                // Vật lý thanh xanh (Player)
+                if (f.isPressing) f.playerV += 1.5;
+                else f.playerV -= 1.0;
+                
+                f.playerY += f.playerV;
+                if (f.playerY < 0) { f.playerY = 0; f.playerV = 0; }
+                if (f.playerY > 140) { f.playerY = 140; f.playerV = 0; }
+
+                // Cá di chuyển thông minh hơn
+                f.fishY += (Math.random() * 6 - 3) + (2 * f.fishDir);
+                if (Math.random() > 0.95) f.fishDir *= -1;
+                if (f.fishY < 0) { f.fishY = 0; f.fishDir = 1; }
+                if (f.fishY > 160) { f.fishY = 160; f.fishDir = -1; }
+
+                // Kiểm tra va chạm
+                const inZone = f.fishY >= f.playerY && f.fishY <= f.playerY + 40;
+                if (inZone) f.catchProgress += 0.8;
+                else f.catchProgress -= 0.5;
+
+                f.catchProgress = Math.max(0, Math.min(100, f.catchProgress));
+
+                // Cập nhật UI
+                document.getElementById('fish-target-zone').style.bottom = f.playerY + 'px';
+                document.getElementById('fish-icon-indicator').style.bottom = f.fishY + 'px';
+                document.getElementById('catch-meter-fill').style.height = f.catchProgress + '%';
+
+                if (f.catchProgress >= 100) finishFishing(true);
+                if (f.catchProgress <= 0 && !inZone && f.fishY > 0) {} // Logic hụt nếu muốn
+            }
+        }
+
+        function handleSleep() {
+            state.day++;
+            state.nrg = 30; // Hồi đầy năng lượng
+            
+            // Cập nhật cây trồng khi qua ngày
+            state.tiles.forEach(t => {
+                if (t.crop && t.watered) {
+                    t.daysGrown++;
+                    t.watered = false; // Đất khô sau một ngày
+                }
+            });
+
+            showToast("Khò khò... Ngày mới đã đến!");
+            renderAll();
+            showV('farm');
+        }
+
+        function renderAll() {
+            updateStats();
+            renderFarm();
+            renderBag();
+        }
+
+        function updateStats() {
+            document.getElementById('m-gold').innerText = state.gold;
+            document.getElementById('m-nrg').innerText = state.nrg;
+            document.getElementById('m-lvl').innerText = state.lvl;
+            document.getElementById('m-day').innerText = state.day;
+            document.querySelectorAll('.d-val').forEach(el => el.innerText = state.day);
+        }
+
+        function renderFarm() {
+            const grid = document.getElementById('farm-grid');
+            grid.innerHTML = '';
+            state.tiles.forEach((t, i) => {
+                const el = document.createElement('div');
+                el.className = `tile ${t.type === 'tilled' ? 'tilled' : ''} ${t.watered ? 'watered' : ''}`;
+                el.onclick = () => handleTile(i);
+                
+                if (t.crop) {
+                    const progress = (t.daysGrown / CROPS[t.crop].time) * 100;
+                    el.innerHTML = progress >= 100 ? CROPS[t.crop].icon : CROPS[t.crop].seed;
+                    el.innerHTML += `<div class="progress-mini"><div class="progress-fill" style="width:${progress}%"></div></div>`;
+                }
+                grid.appendChild(el);
+            });
+            renderFarmStatus();
+        }
+
+        function renderFarmStatus() {
+            const body = document.getElementById('status-body');
+            let html = '';
+            state.tiles.forEach((t, i) => {
+                if (t.type === 'tilled') {
+                    const remaining = t.crop ? Math.max(0, CROPS[t.crop].time - t.daysGrown) : '-';
+                    html += `<tr><td>#${i+1}</td><td>${t.crop ? CROPS[t.crop].name : 'Đất'}</td><td>${remaining} ngày</td><td>${t.watered ? '✅' : '❌'}</td></tr>`;
+                }
+            });
+            body.innerHTML = html || '<tr><td colspan="4">Trống</td></tr>';
+        }
+
+        function handleTile(i) {
+            const t = state.tiles[i];
+            if (state.curTool === 'hoe' && t.type === 'grass') {
+                if (useNrg(1)) { t.type = 'tilled'; renderFarm(); }
+            } else if (state.curTool === 'water' && t.type === 'tilled' && !t.watered) {
+                if (useNrg(1)) { t.watered = true; renderFarm(); }
+            } else if (state.curTool.endsWith('_seed')) {
+                const cId = state.curTool.replace('_seed', '');
+                if (t.type === 'tilled' && !t.crop && state.bag[state.curTool] > 0) {
+                    if (useNrg(1)) {
+                        t.crop = cId; t.daysGrown = 0; state.bag[state.curTool]--;
+                        renderFarm(); renderBag();
+                    }
+                }
+            } else if (state.curTool === 'harvest' && t.crop && t.daysGrown >= CROPS[t.crop].time) {
+                if (useNrg(1)) {
+                    state.storage[t.crop] = (state.storage[t.crop] || 0) + 1;
+                    t.crop = null; t.daysGrown = 0;
+                    renderFarm(); renderBag();
+                }
+            }
+        }
+
+        // FISHING LOGIC
+        function fishAction(pressing) {
+            const f = state.fishing;
+            if (f.step === 'idle' && pressing) {
+                if (!useNrg(2)) return;
+                f.step = 'waiting';
+                document.getElementById('fish-hint').innerText = "Đang chờ...";
+                setTimeout(() => {
+                    if (f.step === 'waiting') {
+                        f.step = 'bite';
+                        document.getElementById('fish-alert').style.display = 'block';
+                    }
+                }, 1000 + Math.random() * 2000);
+            } else if (f.step === 'bite' && pressing) {
+                startMinigame();
+            } else if (f.step === 'minigame') {
+                f.isPressing = pressing;
+            }
+        }
+
+        function startMinigame() {
+            state.fishing.step = 'minigame';
+            state.fishing.catchProgress = 30;
+            state.fishing.playerY = 0;
+            state.fishing.playerV = 0;
+            document.getElementById('fish-idle-ui').style.display = 'none';
+            document.getElementById('fish-game-ui').style.display = 'block';
+        }
+
+        function finishFishing(success) {
+            const f = state.fishing;
+            if (success) {
+                const keys = Object.keys(FISH_DATA);
+                const caughtId = keys[Math.floor(Math.random() * keys.length)];
+                state.storage[caughtId] = (state.storage[caughtId] || 0) + 1;
+                showToast("TUYỆT VỜI! Bắt được " + FISH_DATA[caughtId].name);
+            }
+            f.step = 'idle';
+            document.getElementById('fish-idle-ui').style.display = 'block';
+            document.getElementById('fish-game-ui').style.display = 'none';
+            document.getElementById('fish-alert').style.display = 'none';
+            document.getElementById('fish-hint').innerText = "Chạm để thả mồi (2⚡)";
+            renderBag();
+        }
+
+        // CÁC HÀM CŨ GIỮ NGUYÊN
+        function switchShop(t) {
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            renderShop(t);
+        }
+
+        function renderShop(type = 'seed') {
+            const content = document.getElementById('shop-content');
+            let html = '<div class="card">';
+            const data = type === 'seed' ? CROPS : (type === 'food' ? FOOD : null);
+            if (data) {
+                for (let id in data) {
+                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+                        <span>${data[id].icon || ''} ${data[id].name} (${data[id].cost}💰)</span>
+                        <button class="btn" onclick="buy('${type}','${id}')">${type==='food'?'Ăn':'Mua'}</button>
+                    </div>`;
+                }
+            } else if (type === 'sell') {
+                for (let id in state.storage) {
+                    if (state.storage[id] > 0) {
+                        let price = CROPS[id]?.sell || FISH_DATA[id]?.sell || 10;
+                        html += `<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span>${id} x${state.storage[id]}</span>
+                            <button class="btn warn" onclick="sellItem('${id}', ${price})">Bán (+${state.storage[id]*price}💰)</button>
+                        </div>`;
+                    }
+                }
+            }
+            content.innerHTML = html + '</div>';
+        }
+
+        function buy(type, id) {
+            const item = type === 'seed' ? CROPS[id] : FOOD[id];
+            if (state.gold >= item.cost) {
+                state.gold -= item.cost;
+                if (type === 'seed') state.bag[id + '_seed'] = (state.bag[id + '_seed'] || 0) + 1;
+                else if (type === 'food') state.nrg = Math.min(30, state.nrg + item.nrg);
+                updateStats(); renderBag(); renderShop(type);
+            } else showToast("Hết tiền!");
+        }
+
+        function sellItem(id, price) {
+            state.gold += state.storage[id] * price;
+            state.storage[id] = 0;
+            updateStats(); renderShop('sell'); renderBag();
+        }
+
+        function renderBag() {
+            const bag = document.getElementById('bag-list');
+            bag.innerHTML = '';
+            for (let id in state.bag) {
+                if (state.bag[id] > 0) {
+                    const name = CROPS[id.replace('_seed','')]?.name || id;
+                    bag.innerHTML += `<div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+                        <span>${name} x${state.bag[id]}</span>
+                        <button class="btn" onclick="selectT('${id}')">Dùng</button>
+                    </div>`;
+                }
+            }
+            const storage = document.getElementById('storage-list');
+            storage.innerHTML = '';
+            for (let id in state.storage) {
+                if (state.storage[id] > 0) {
+                    storage.innerHTML += `<span>${(CROPS[id]?.icon || FISH_DATA[id]?.icon || '📦')} x${state.storage[id]} </span>`;
+                }
+            }
+        }
+
+        function selectT(t) {
+            state.curTool = t;
+            document.getElementById('cur-tool-name').innerText = (CROPS[t.replace('_seed','')]?.name || t);
+        }
+
+        function showV(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
+            document.getElementById('v-' + v).classList.add('active-view');
+            if (v === 'shop') renderShop('seed');
+            if (v === 'bag') renderBag();
+        }
+
+        init();
+    </script>
+</body>
 </html>
